@@ -1,0 +1,34 @@
+{
+  "agents": [
+    {
+      "id": "orchestrator",
+      "name": "Orchestrator",
+      "class": "os",
+      "configFile": "orchestrator-agent.md",
+      "permissions": {
+        "canRead": ["SOUL.md", "CONSTITUTION.md", "registry.json"],
+        "canWrite": []
+      }
+    },
+    {
+      "id": "planner",
+      "name": "General Planner",
+      "class": "planner",
+      "configFile": "planner-agent.md",
+      "permissions": {
+        "canRead": ["SOUL.md", "CONSTITUTION.md", "registry.json"],
+        "canWrite": ["runtime/plans/"]
+      }
+    },
+    {
+      "id": "executor",
+      "name": "Executor",
+      "class": "action",
+      "configFile": "executor-agent.md",
+      "permissions": {
+        "canRead": ["SOUL.md", "CONSTITUTION.md", "registry.json", "runtime/plans/"],
+        "canWrite": ["runtime/plans/"]
+      }
+    }
+  ]
+}
