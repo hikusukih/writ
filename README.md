@@ -1,4 +1,4 @@
-# DomestiClaw
+# Writ
 
 A self-improving, locally-deployed multi-agent system. Inspired by OpenClaw, marginally safer.
 
@@ -7,7 +7,7 @@ A self-improving, locally-deployed multi-agent system. Inspired by OpenClaw, mar
 ```bash
 # Clone and install
 git clone <repo-url>
-cd domestiClaw
+cd writ
 npm install
 
 # Configure
@@ -20,7 +20,7 @@ npm run dev
 
 ## What It Does
 
-DomestiClaw takes your requests and routes them through a chain of specialized agents:
+Writ takes your requests and routes them through a chain of specialized agents:
 
 1. **Orchestrator** interprets your intent and synthesizes the final response
 2. **General [*Planner*](docs/dictionary.md)** partitions work into assignments; **Lieutenant Planner** produces script-level plans
