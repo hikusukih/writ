@@ -1,4 +1,4 @@
-# DomestiClaw Implementation Roadmap
+# Writ Implementation Roadmap
 
 ### Key Files
 See `CLAUDE.md` for the full source file map.
@@ -104,7 +104,7 @@ graph LR
 - Falls back to rule-based reviewer on parse/API failure
 
 ### 2.6 Configurable ALLOWED_ROOT + Bootstrap Scripts `[x]` (completed 2026-02-20)
-- `ALLOWED_ROOT` computed from `$0` at runtime; overridable via `DOMESTICLAW_ALLOWED_ROOT`
+- `ALLOWED_ROOT` computed from `$0` at runtime; overridable via `WRIT_ALLOWED_ROOT`
 - 3 new bootstrap scripts: `git-status`, `append-file`, `search-content`
 
 ### 2.6.5 XYZ-AGENT.md Rewrite `[x]` (completed 2026-02-20)
@@ -174,7 +174,7 @@ These require the full Phase 2 review chain before they're safe to build. Develo
 
 *Tier 7 — Speculative*
 
-- **(24)** **ClawdBot Integration & Untrusted Execution** *(Backlog)*: Sandbox model for imported skills/agents outside DomestiClaw's review chain. When the core system is solid. See [`docs/planning/backlog/backlog-clawdbot.md`](backlog/backlog-clawdbot.md).
+- **(24)** **ClawdBot Integration & Untrusted Execution** *(Backlog)*: Sandbox model for imported skills/agents outside Writ's review chain. When the core system is solid. See [`docs/planning/backlog/backlog-clawdbot.md`](backlog/backlog-clawdbot.md).
 
 ---
 

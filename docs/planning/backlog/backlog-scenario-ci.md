@@ -1,7 +1,7 @@
 # Scenario CI via Claude Code Web
 
 ## Summary
-Use Claude Code web sessions as an automated integration testing environment. Each session boots a clean DomestiClaw instance, feeds it behavioral scenarios, observes results, and validates that the system performs as expected — including script authoring, review, and execution. Doubles as a self-improvement smoke test: can the system write useful scripts and make progress on real tasks without human intervention?
+Use Claude Code web sessions as an automated integration testing environment. Each session boots a clean Writ instance, feeds it behavioral scenarios, observes results, and validates that the system performs as expected — including script authoring, review, and execution. Doubles as a self-improvement smoke test: can the system write useful scripts and make progress on real tasks without human intervention?
 
 ## Motivation
 Unit tests verify individual components. Scenario CI verifies the *system* — the full agent chain operating on real LLM calls against real tasks. The ephemeral nature of Claude Code web sessions is an asset: every run starts from a clean repo clone (the "base shipped instance"), so tests are reproducible and state pollution is impossible.

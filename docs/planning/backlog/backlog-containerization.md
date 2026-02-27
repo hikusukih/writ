@@ -4,7 +4,7 @@
 AgentOS ships as a self-contained deployable container. All internal services — Gitea, script runner, logs, dashboard — run inside it. A user deploys one container and gets a fully functional instance.
 
 ## Motivation
-The "agent as a self-expanding OS" analogy implies a deployable unit, not a manual install process. Containerization is what makes DomestiClaw an artifact you hand someone rather than a setup procedure. It's also the prerequisite for Gitea and the web dashboard running inside the instance boundary.
+The "agent as a self-expanding OS" analogy implies a deployable unit, not a manual install process. Containerization is what makes Writ an artifact you hand someone rather than a setup procedure. It's also the prerequisite for Gitea and the web dashboard running inside the instance boundary.
 
 ## Design Notes
 Internal services (Gitea, etc.) are embedded rather than sidecars — consistent with the project philosophy of self-containment. The instance could conceivably swap internal services later; the stable boundary is the container's external interface, not which software runs inside.

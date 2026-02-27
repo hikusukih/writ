@@ -18,7 +18,7 @@ Once Developer/Writer is live and producing scripts, there needs to be a gate be
 
 **Human override**: The human operator can review and merge (or close) any PR via the Gitea UI. The agent review is not the only path to merge.
 
-**Dogfooding note**: Switching to a branch workflow for DomestiClaw's own development (before this feature is built) is worthwhile — it makes the workflow concrete and surfaces any friction before agents have to deal with it.
+**Dogfooding note**: Switching to a branch workflow for Writ's own development (before this feature is built) is worthwhile — it makes the workflow concrete and surfaces any friction before agents have to deal with it.
 
 ## Open Questions
 - Is Code-Reviewing-Agent a new agent class or a specialized mode of Developer-Reviewer?

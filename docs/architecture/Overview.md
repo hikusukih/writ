@@ -1,4 +1,4 @@
-# DomestiClaw Architecture Overview
+# Writ Architecture Overview
 
 > **This document (and the entire set in docs/architecture) describes the intended design — not current implementation state.** For what is built vs. what is planned, see `docs/planning/Roadmap.md`.
 
@@ -12,7 +12,7 @@ The goal is to mutate the architecture and find something less insecure. The ana
 
 Linux as a concept is like... a set of filesystems, each serving a different purpose, each maintained by a set of authors. When some user instantiates it, they take the basic set of files and customize it the way they want it. It's just a big list of files, with different permissions. The user can choose which files to modify, which to add, in order to give the system different capabilities.
 
-Similarly, DomestiClaw should be a set of files, executables, best practices. Different versions will be maintained for different purposes by different authors. The difference is that it can modify (certain parts of) itself, and act as an author.
+Similarly, Writ should be a set of files, executables, best practices. Different versions will be maintained for different purposes by different authors. The difference is that it can modify (certain parts of) itself, and act as an author.
 
 It should be a capable user of an OS - it should seek updates at intervals, or use the tools provided by the system (cron jobs to start package manager updates) to do so. It should download software, having considered whether the software is fit for the purpose, and secure enough for the purpose such that side effects are not undesirable.
 
@@ -107,12 +107,12 @@ The function's code is not editable by agents (at least not until the system pro
 
 ## Filesystem Layout
 
-The filesystem separates **building DomestiClaw** (project tooling, source code, docs) from **running an instance** (identity, scripts, runtime output). Everything a running instance needs lives under `src/instance/` in source and `dist/instance/` after build.
+The filesystem separates **building Writ** (project tooling, source code, docs) from **running an instance** (identity, scripts, runtime output). Everything a running instance needs lives under `src/instance/` in source and `dist/instance/` after build.
 
 ```
-domestiClaw/
+writ/
 │
-│ ── INSTANCE INPUTS (what a running DomestiClaw is) ──────────────
+│ ── INSTANCE INPUTS (what a running Writ is) ──────────────
 │
 ├── src/
 │   ├── instance/              # Assets that ship with an instance
@@ -196,7 +196,7 @@ domestiClaw/
 │       ├── identity/          #     (same structure as source)
 │       └── scripts/
 │
-│ ── PROJECT (building DomestiClaw, not used by instances) ────────
+│ ── PROJECT (building Writ, not used by instances) ────────
 │
 ├── docs/                      # Design documentation (human-facing)
 │   ├── architecture/          #   Specs (this file, agent specs, models)
@@ -231,7 +231,7 @@ domestiClaw/
 ```
 
 **Key distinctions:**
-- `src/instance/` = what a DomestiClaw instance *is*: identity (LLM context) + scripts (capabilities). Copied to `dist/` on build.
+- `src/instance/` = what a Writ instance *is*: identity (LLM context) + scripts (capabilities). Copied to `dist/` on build.
 - `src/` (rest) = deterministic code (what the agents *do*). Compiled to `dist/` on build. Not self-modifiable.
 - `dist/` = self-contained deployable. Compiled JS + instance assets. Gitignored.
 - `runtime/` = ephemeral instance output. *Plan*, logs. Gitignored. Safe to delete.
@@ -239,13 +239,13 @@ domestiClaw/
 
 ## Design Intent
 
-An OS-oriented mentality for maintaining a DomestiClaw instance would create a repository of vetted scripts and tools to accomplish tasks. It would include documentation about which software is good for which purposes, and what side effects or security implications exist.
+An OS-oriented mentality for maintaining a Writ instance would create a repository of vetted scripts and tools to accomplish tasks. It would include documentation about which software is good for which purposes, and what side effects or security implications exist.
 
-It will certainly fail to do the correct thing in early iterations. But just as the open source community around Linux has settled on good practices, a community built around refining DomestiClaw could come to a workable set of solutions whereby the adjutant could make reasonable decisions about using the set of available scripts and software to effectively complete user requests.
+It will certainly fail to do the correct thing in early iterations. But just as the open source community around Linux has settled on good practices, a community built around refining Writ could come to a workable set of solutions whereby the adjutant could make reasonable decisions about using the set of available scripts and software to effectively complete user requests.
 
 ## Design Lineage
 
-DomestiClaw is a security-first redesign of OpenClaw. For the specific design decisions inherited from OpenClaw and the rationale behind them, see [docs/background/OpenClawRationale.md](../background/OpenClawRationale.md).
+Writ is a security-first redesign of OpenClaw. For the specific design decisions inherited from OpenClaw and the rationale behind them, see [docs/background/OpenClawRationale.md](../background/OpenClawRationale.md).
 
 ## Agent Classes Overview
 
@@ -421,4 +421,4 @@ This subsystem's design is tracked in [OpenQuestions.md §11](../planning/OpenQu
 
 ## Meta-System
 
-A larger meta-system spins up instances of DomestiClaw, runs them for a while, notes issues, and curates/maintains creation of new instances. This allows experimentation and iteration without requiring all work to be done by human hands. The meta-system informs design decisions around logging and Review Flags — specifically, what gets logged and how flags propagate must be compatible with meta-tier analysis. See [OpenQuestions.md §15](../planning/OpenQuestions.md#15-the-meta-tier-process) for open design questions.
+A larger meta-system spins up instances of Writ, runs them for a while, notes issues, and curates/maintains creation of new instances. This allows experimentation and iteration without requiring all work to be done by human hands. The meta-system informs design decisions around logging and Review Flags — specifically, what gets logged and how flags propagate must be compatible with meta-tier analysis. See [OpenQuestions.md §15](../planning/OpenQuestions.md#15-the-meta-tier-process) for open design questions.

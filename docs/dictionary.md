@@ -25,7 +25,7 @@ An agent that produces structured plans consumed by other agents. Planner output
 → See [Overview.md § Agent Classes Overview](architecture/Overview.md#agent-classes-overview) for class-level documentation.
 
 ## *AgentOS*
-The DomestiClaw agent ecosystem: the set of agents, scripts, identity files, and infrastructure that constitute a running instance. DomestiClaw is an *AgentOS*. OpenClaw is an insecure one.
+The Writ agent ecosystem: the set of agents, scripts, identity files, and infrastructure that constitute a running instance. Writ is an *AgentOS*. OpenClaw is an insecure one.
 
 ## *Anti-pattern List*
 An append-only per-agent file (e.g., `anti-patterns-developer.md`) recording known problematic patterns. *Reviewers* read these but do not write directly — appends are triggered by *Reviewer-Reviewer* flags or meta-tier tooling.
