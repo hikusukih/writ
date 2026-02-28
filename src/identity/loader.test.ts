@@ -8,7 +8,7 @@ describe("loadIdentity", () => {
   let testDir: string;
 
   beforeAll(async () => {
-    testDir = await mkdtemp(join(tmpdir(), "domesticlaw-test-"));
+    testDir = await mkdtemp(join(tmpdir(), "writ-test-"));
     await mkdir(join(testDir, "agents"), { recursive: true });
 
     await writeFile(join(testDir, "SOUL.md"), "# Test Soul\nBe helpful.");
@@ -68,7 +68,7 @@ describe("loadIdentity", () => {
   });
 
   it("throws on missing SOUL.md", async () => {
-    const emptyDir = await mkdtemp(join(tmpdir(), "domesticlaw-empty-"));
+    const emptyDir = await mkdtemp(join(tmpdir(), "writ-empty-"));
     await expect(loadIdentity(emptyDir)).rejects.toThrow();
     await rm(emptyDir, { recursive: true });
   });
@@ -101,7 +101,7 @@ describe("loadIdentity", () => {
   });
 
   it("throws on invalid registry.json", async () => {
-    const badDir = await mkdtemp(join(tmpdir(), "domesticlaw-bad-"));
+    const badDir = await mkdtemp(join(tmpdir(), "writ-bad-"));
     await mkdir(join(badDir, "agents"), { recursive: true });
     await writeFile(join(badDir, "SOUL.md"), "soul");
     await writeFile(join(badDir, "CONSTITUTION.md"), "constitution");

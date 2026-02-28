@@ -8,7 +8,7 @@ describe("appendAntiPattern", () => {
   let testDir: string;
 
   beforeEach(async () => {
-    testDir = await mkdtemp(join(tmpdir(), "domesticlaw-ap-"));
+    testDir = await mkdtemp(join(tmpdir(), "writ-ap-"));
   });
 
   afterEach(async () => {

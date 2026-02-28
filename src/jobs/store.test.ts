@@ -8,7 +8,7 @@ let testDir: string;
 let store: JobStore;
 
 beforeEach(async () => {
-  testDir = await mkdtemp(join(tmpdir(), "domesticlaw-jobs-"));
+  testDir = await mkdtemp(join(tmpdir(), "writ-jobs-"));
   store = await createJobStore(testDir);
 });
 

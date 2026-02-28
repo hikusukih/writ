@@ -25,7 +25,7 @@ function makePartial(overrides: Record<string, unknown> = {}) {
 
 describe("scheduler", () => {
   beforeEach(async () => {
-    testDir = await mkdtemp(join(tmpdir(), "domesticlaw-sched-"));
+    testDir = await mkdtemp(join(tmpdir(), "writ-sched-"));
     store = await createJobStore(testDir);
   });
 

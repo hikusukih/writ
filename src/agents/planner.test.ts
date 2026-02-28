@@ -52,7 +52,7 @@ describe("createPlan", () => {
   let plansDir: string;
 
   beforeAll(async () => {
-    testDir = await mkdtemp(join(tmpdir(), "domesticlaw-planner-"));
+    testDir = await mkdtemp(join(tmpdir(), "writ-planner-"));
     scriptsDir = join(testDir, "scripts");
     plansDir = join(testDir, "plans");
     const { mkdir } = await import("node:fs/promises");
@@ -180,7 +180,7 @@ describe("createStrategicPlan", () => {
   let plansDir: string;
 
   beforeAll(async () => {
-    testDir = await mkdtemp(join(tmpdir(), "domesticlaw-strategic-"));
+    testDir = await mkdtemp(join(tmpdir(), "writ-strategic-"));
     plansDir = join(testDir, "plans");
     const { mkdir } = await import("node:fs/promises");
     await mkdir(plansDir, { recursive: true });

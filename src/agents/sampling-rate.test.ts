@@ -116,7 +116,7 @@ describe("persistence", () => {
   let runtimeDir: string;
 
   beforeAll(async () => {
-    runtimeDir = await mkdtemp(join(tmpdir(), "domesticlaw-sr-"));
+    runtimeDir = await mkdtemp(join(tmpdir(), "writ-sr-"));
   });
 
   afterAll(async () => {

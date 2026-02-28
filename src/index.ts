@@ -37,10 +37,10 @@ async function appendLog(entry: Record<string, unknown>): Promise<void> {
 async function main(): Promise<void> {
   const adapter = createCLIAdapter({
     // TODO: Make this the name of the Agent as named by the user (probably from SOUL.md)
-    prompt: "domesticlaw> ",
+    prompt: "writ> ",
   });
 
-  adapter.sendStatus(`DomestiClaw v${VERSION}`);
+  adapter.sendStatus(`Writ v${VERSION}`);
 
   const provider = process.env.LLM_PROVIDER ?? "anthropic";
   if (provider !== "ollama" && !process.env.ANTHROPIC_API_KEY) {

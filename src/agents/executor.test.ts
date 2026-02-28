@@ -10,7 +10,7 @@ describe("executeFromPlan", () => {
   let plansDir: string;
 
   beforeAll(async () => {
-    const testDir = await mkdtemp(join(tmpdir(), "domesticlaw-executor-"));
+    const testDir = await mkdtemp(join(tmpdir(), "writ-executor-"));
     scriptsDir = join(testDir, "scripts");
     plansDir = join(testDir, "plans");
     await mkdir(scriptsDir, { recursive: true });

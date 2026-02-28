@@ -10,7 +10,7 @@ describe("writeAgentConfig", () => {
   let runtimeDir: string;
 
   beforeAll(async () => {
-    testDir = await mkdtemp(join(tmpdir(), "domesticlaw-writer-"));
+    testDir = await mkdtemp(join(tmpdir(), "writ-writer-"));
     identityDir = join(testDir, "identity");
     runtimeDir = join(testDir, "runtime");
     await mkdir(join(identityDir, "agents"), { recursive: true });
@@ -69,7 +69,7 @@ describe("writeReviewerConfig", () => {
   let identityDir: string;
 
   beforeAll(async () => {
-    testDir = await mkdtemp(join(tmpdir(), "domesticlaw-writer-rev-"));
+    testDir = await mkdtemp(join(tmpdir(), "writ-writer-rev-"));
     identityDir = join(testDir, "identity");
     await mkdir(join(identityDir, "agents"), { recursive: true });
   });
@@ -94,7 +94,7 @@ describe("backupConfig", () => {
   let runtimeDir: string;
 
   beforeAll(async () => {
-    testDir = await mkdtemp(join(tmpdir(), "domesticlaw-writer-bk-"));
+    testDir = await mkdtemp(join(tmpdir(), "writ-writer-bk-"));
     identityDir = join(testDir, "identity");
     runtimeDir = join(testDir, "runtime");
     await mkdir(join(identityDir, "agents"), { recursive: true });

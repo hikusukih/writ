@@ -9,7 +9,7 @@ describe("compile", () => {
   let testDir: string;
 
   beforeAll(async () => {
-    testDir = await mkdtemp(join(tmpdir(), "domesticlaw-compiler-"));
+    testDir = await mkdtemp(join(tmpdir(), "writ-compiler-"));
 
     await writeFile(
       join(testDir, "echo-msg.sh"),
