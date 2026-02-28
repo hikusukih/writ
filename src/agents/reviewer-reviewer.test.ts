@@ -115,7 +115,7 @@ describe("sampleAndAudit", () => {
   let logsDir: string;
 
   beforeAll(async () => {
-    logsDir = await mkdtemp(join(tmpdir(), "domesticlaw-rr-"));
+    logsDir = await mkdtemp(join(tmpdir(), "writ-rr-"));
   });
 
   afterAll(async () => {
@@ -137,7 +137,7 @@ describe("sampleAndAudit", () => {
   });
 
   it("returns null when no review log entries exist", async () => {
-    const emptyDir = await mkdtemp(join(tmpdir(), "domesticlaw-rr-empty-"));
+    const emptyDir = await mkdtemp(join(tmpdir(), "writ-rr-empty-"));
     const client: LLMClient = {
       async sendMessage() {
         throw new Error("Should not be called");

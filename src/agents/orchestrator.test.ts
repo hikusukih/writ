@@ -61,7 +61,7 @@ describe("handleRequest", () => {
   let plansDir: string;
 
   beforeAll(async () => {
-    const testDir = await mkdtemp(join(tmpdir(), "domesticlaw-orch-"));
+    const testDir = await mkdtemp(join(tmpdir(), "writ-orch-"));
     scriptsDir = join(testDir, "scripts");
     plansDir = join(testDir, "plans");
     await mkdir(scriptsDir, { recursive: true });
@@ -104,12 +104,12 @@ describe("handleRequest", () => {
       }
       if (count === 3) {
         return {
-          content: JSON.stringify(detailedPlanJson("greet", "Echo hello", "echo-msg", { MSG: "Hello from DomestiClaw!" })),
+          content: JSON.stringify(detailedPlanJson("greet", "Echo hello", "echo-msg", { MSG: "Hello from Writ!" })),
           inputTokens: 200, outputTokens: 100,
         };
       }
       // Call 4: response summarizer
-      return { content: "I echoed the message 'Hello from DomestiClaw!' successfully.", inputTokens: 100, outputTokens: 20 };
+      return { content: "I echoed the message 'Hello from Writ!' successfully.", inputTokens: 100, outputTokens: 20 };
     };
     const client: LLMClient = {
       async sendMessage() { callCount++; return mockResponse(callCount); },
@@ -120,7 +120,7 @@ describe("handleRequest", () => {
       client, "say hello", mockIdentity, scriptsDir, plansDir, undefined, true
     );
 
-    expect(result.response).toContain("Hello from DomestiClaw!");
+    expect(result.response).toContain("Hello from Writ!");
     expect(result.provenance.length).toBeGreaterThanOrEqual(4);
     expect(result.provenance[0].agentId).toBe("orchestrator");
     expect(result.provenance[1].agentId).toBe("planner");

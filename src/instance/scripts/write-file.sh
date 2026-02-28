@@ -5,7 +5,7 @@
 # @param CONTENT Content to write to the file
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-ALLOWED_ROOT="${DOMESTICLAW_ALLOWED_ROOT:-$(cd "$SCRIPT_DIR/../../.." && pwd)}"
+ALLOWED_ROOT="${WRIT_ALLOWED_ROOT:-$(cd "$SCRIPT_DIR/../../.." && pwd)}"
 
 if [ -z "$FILE_PATH" ]; then
   echo "Error: FILE_PATH is required" >&2

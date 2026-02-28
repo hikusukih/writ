@@ -4,7 +4,7 @@
 # @param TARGET_DIR The directory to list (defaults to project root)
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-ALLOWED_ROOT="${DOMESTICLAW_ALLOWED_ROOT:-$(cd "$SCRIPT_DIR/../../.." && pwd)}"
+ALLOWED_ROOT="${WRIT_ALLOWED_ROOT:-$(cd "$SCRIPT_DIR/../../.." && pwd)}"
 
 dir="${TARGET_DIR:-$ALLOWED_ROOT}"
 resolved=$(realpath "$dir" 2>/dev/null)

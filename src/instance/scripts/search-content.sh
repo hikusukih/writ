@@ -5,7 +5,7 @@
 # @param FILE_PATTERN Optional glob pattern to limit search (e.g. "*.ts", defaults to all files)
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-ALLOWED_ROOT="${DOMESTICLAW_ALLOWED_ROOT:-$(cd "$SCRIPT_DIR/../../.." && pwd)}"
+ALLOWED_ROOT="${WRIT_ALLOWED_ROOT:-$(cd "$SCRIPT_DIR/../../.." && pwd)}"
 
 if [ -z "$QUERY" ]; then
   echo "Error: QUERY is required" >&2

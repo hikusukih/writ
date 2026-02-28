@@ -100,7 +100,7 @@ describe("applyConfigUpdate", () => {
   let runtimeDir: string;
 
   beforeAll(async () => {
-    testDir = await mkdtemp(join(tmpdir(), "domesticlaw-bb-"));
+    testDir = await mkdtemp(join(tmpdir(), "writ-bb-"));
     identityDir = join(testDir, "identity");
     runtimeDir = join(testDir, "runtime");
     await mkdir(join(identityDir, "agents"), { recursive: true });
@@ -198,7 +198,7 @@ describe("triggerBigBrother", () => {
   let runtimeDir: string;
 
   beforeAll(async () => {
-    testDir = await mkdtemp(join(tmpdir(), "domesticlaw-bb-trigger-"));
+    testDir = await mkdtemp(join(tmpdir(), "writ-bb-trigger-"));
     identityDir = join(testDir, "identity");
     runtimeDir = join(testDir, "runtime");
     await mkdir(join(identityDir, "agents"), { recursive: true });

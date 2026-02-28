@@ -10,7 +10,7 @@ describe("runScript", () => {
   let scriptPath: string;
 
   beforeAll(async () => {
-    testDir = await mkdtemp(join(tmpdir(), "domesticlaw-scripts-"));
+    testDir = await mkdtemp(join(tmpdir(), "writ-scripts-"));
     scriptPath = join(testDir, "test.sh");
     await writeFile(scriptPath, '#!/bin/bash\necho "hello $NAME"', {
       mode: 0o755,
@@ -28,8 +28,8 @@ describe("runScript", () => {
   });
 
   it("passes params as env vars", async () => {
-    const result = await runScript(scriptPath, { NAME: "DomestiClaw" });
-    expect(result.stdout).toBe("hello DomestiClaw");
+    const result = await runScript(scriptPath, { NAME: "Writ" });
+    expect(result.stdout).toBe("hello Writ");
   });
 
   it("captures stderr", async () => {
@@ -55,7 +55,7 @@ describe("listScripts", () => {
   let testDir: string;
 
   beforeAll(async () => {
-    testDir = await mkdtemp(join(tmpdir(), "domesticlaw-index-"));
+    testDir = await mkdtemp(join(tmpdir(), "writ-index-"));
     await writeFile(
       join(testDir, "greet.sh"),
       [
