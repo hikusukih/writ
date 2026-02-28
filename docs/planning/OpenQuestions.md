@@ -1,4 +1,4 @@
-# DomestiClaw — Open Design Questions
+# Writ — Open Design Questions
 
 Decisions made and questions still open, organized by subsystem.
 This is a living document. Move items from "Open" to the appropriate Phase in `Roadmap.md` once decided.

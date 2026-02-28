@@ -1,10 +1,10 @@
 # ClawdBot Integration & Untrusted Execution
 
 ## Summary
-A potential sandbox model for imported ClawdBot skills and agents that lack DomestiClaw-native review guarantees. Also covers a vetting pipeline to transform imported skills into proper DomestiClaw scripts or agents.
+A potential sandbox model for imported ClawdBot skills and agents that lack Writ-native review guarantees. Also covers a vetting pipeline to transform imported skills into proper Writ scripts or agents.
 
 ## Motivation
-ClawdBot and similar systems may offer useful capabilities that would be expensive to replicate. The question is whether DomestiClaw can host agents or skills from outside its own review chain — and if so, under what containment model.
+ClawdBot and similar systems may offer useful capabilities that would be expensive to replicate. The question is whether Writ can host agents or skills from outside its own review chain — and if so, under what containment model.
 
 ## Design Notes
 

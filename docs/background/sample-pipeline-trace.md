@@ -111,7 +111,7 @@ LP detects `missingScripts` is non-empty. Calls `generateScript()` with the capa
 # @param SEPARATOR Optional separator between files (defaults to a filename header comment)
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-ALLOWED_ROOT="${DOMESTICLAW_ALLOWED_ROOT:-$(cd "$SCRIPT_DIR/../../.." && pwd)}"
+ALLOWED_ROOT="${WRIT_ALLOWED_ROOT:-$(cd "$SCRIPT_DIR/../../.." && pwd)}"
 
 if [ -z "$SOURCE_DIR" ]; then
   echo "Error: SOURCE_DIR is required" >&2

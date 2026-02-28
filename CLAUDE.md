@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-DomestiClaw is a self-improving, locally-deployed multi-agent system inspired by OpenClaw with a security-first redesign. The core analogy is "agent as a self-expanding OS." The system routes user requests through an Orchestrator → [*Planner*](docs/dictionary.md) → Executor → shell script pipeline, with each agent's output reviewed before proceeding.
+Writ is a self-improving, locally-deployed multi-agent system inspired by OpenClaw with a security-first redesign. The core analogy is "agent as a self-expanding OS." The system routes user requests through an Orchestrator → [*Planner*](docs/dictionary.md) → Executor → shell script pipeline, with each agent's output reviewed before proceeding.
 
 ## Build & Run
 
