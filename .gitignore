@@ -1,0 +1,41 @@
+# Compiled output
+dist/
+*.js
+*.js.map
+*.d.ts
+
+# Runtime & ephemeral artifacts (safe to delete)
+runtime/
+*.log
+logs/
+
+# Exported/archived docs (not part of working codebase)
+export/
+
+# Dependencies
+node_modules/
+package-lock.json
+npm-debug.log*
+yarn-lock.json
+
+# Environment & secrets
+.env
+.env.local
+.env.*.local
+
+# IDE & OS
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# Build artifacts
+build/
+out/
