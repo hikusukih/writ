@@ -84,7 +84,7 @@ The General Planner partitions work into high-level assignments; the Lieutenant 
 - `src/io/IOAdapter.ts` — `IOAdapter` interface for messaging abstraction
 - `src/io/CLIAdapter.ts` — `createCLIAdapter()` CLI implementation of IOAdapter
 - `src/io/TestAdapter.ts` — `TestAdapter` IOAdapter for tests: collects all output into inspectable arrays, configurable `requestConfirmation()`
-- `src/io/MockLLMClient.ts` — `MockLLMClient` pattern-matched mock LLM client for integration tests; configurable per-agent responses
+- `src/test-utils/MockLLMClient.ts` — `MockLLMClient` pattern-matched mock LLM client for integration tests; configurable per-agent responses
 - `src/integration/pipeline.integration.test.ts` — 5 smoke tests exercising the full Orch → GP → LP → Executor → Compiler pipeline
 - `src/jobs/types.ts` — `Job`, `JobType`, `JobStatus`, `Callback`, `StatementRef` types
 - `src/jobs/store.ts` — `createJobStore()` persistent job store in `runtime/jobs/`
@@ -118,8 +118,17 @@ The General Planner partitions work into high-level assignments; the Lieutenant 
 - **Functional style**: Export functions, not classes. `LLMClient` is an interface for mockability.
 - **Zod validation**: All JSON read from disk or parsed from Claude responses validated with Zod schemas.
 - **Tests alongside source**: `foo.ts` → `foo.test.ts` in same directory. Vitest with mocked Claude client.
-- **Integration tests**: `src/integration/*.integration.test.ts` — run via `npm run test:integration`. Use `TestAdapter` + `MockLLMClient` for full pipeline coverage without process spawning. `npm test` excludes these; `npm run test:all` includes both.
+- **Integration tests**: `src/integration/*.integration.test.ts` — run via `npm run test:integration`. Import functions directly; don't use CLIAdapter or spawn processes. Use `TestAdapter` (collects all output into inspectable arrays) and `MockLLMClient` (returns valid Zod-parseable responses per agent role). `npm test` excludes these; `npm run test:all` includes both.
 - **Script frontmatter**: Shell scripts use `# @name`, `# @description`, `# @param` comment headers for discovery.
+
+## Integration Test Requirements
+
+Every new feature that touches the pipeline must include an integration test in `src/integration/`. The test validates behavior through `handleRequest()` → `TestAdapter` assertion — no process spawning, no readline, no CLIAdapter.
+
+- **Use `TestAdapter`** to collect output; assert on `results`, `errors`, `statusMessages`, and `confirmationRequests`.
+- **Use `MockLLMClient`** for deterministic behavior. If a feature needs new mock response shapes, add them to `src/test-utils/MockLLMClient.ts` rather than creating one-off mocks per test.
+- **New agent roles or review paths** need at least two cases: one where review allows the pipeline to continue and one where it halts (or FAFC routes through the HJA and `requestConfirmation()` returns `false`).
+- **`/process-task-list` completeness gate**: a parent task is not done until `npm run test:integration` is green. Don't mark the task complete or commit it as finished until the integration test passes.
 
 ## Workflow Commands
 
