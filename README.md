@@ -40,10 +40,18 @@ See `docs/architecture/Overview.md` for the full architecture, or `CLAUDE.md` fo
 ## Development
 
 ```bash
-npm run build          # Compile TypeScript
-npm test               # Run tests
-npm run dev            # Start REPL
+npm run build               # Compile TypeScript
+npm test                    # Run unit tests
+npm run test:integration    # Run integration tests (mocked LLM)
+npm run test:all            # Run unit + integration tests
+npm run dev                 # Start REPL
 npm run dev -- --no-review  # Skip security review (dev only)
+```
+
+Integration tests exercise the full pipeline end-to-end (Orchestrator → GP → LP → Executor → Compiler) with a mock LLM by default. To run with real API calls:
+
+```bash
+USE_REAL_LLM=1 npm run test:integration
 ```
 
 ## Adding [*Script*](docs/dictionary.md)
