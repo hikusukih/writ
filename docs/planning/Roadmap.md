@@ -36,6 +36,7 @@ See `CLAUDE.md` for the full source file map.
 | Review Sampling Rate | Built — Phase 3 Tier 3 (completed 2026-02-25) |
 | Identity Writer (atomic config writes + backups) | Built — Phase 3 Tier 3 (completed 2026-02-25) |
 | Pre-Execution Semantic Review (stubbed gate) | Built — Phase 3 Tier 3 (completed 2026-02-25) |
+| Integration Test Harness (`TestAdapter`, `MockLLMClient`, 5 smoke tests) | Built — Phase 3 Tier 3 (completed 2026-03-11) |
 | Job Graph & Scheduler | Partial — types, store, scheduler core built (2026-02-25); orchestrator refactor + DefaultJobExecutor pending |
 | Initiative system | Phase 3 — Tier 4 |
 | USER.md | Phase 3 — Tier 6 |
@@ -147,6 +148,7 @@ These require the full Phase 2 review chain before they're safe to build. Develo
 - **(8)** **Review Sampling Rate System** `[x]` (completed 2026-02-25): `src/agents/sampling-rate.ts` — per-agent dynamic rate. Clean invocations decay toward floor (5%, OS 15%). Flags reset to 100%. Integrated into `applyReview()`.
 - **(9)** **XYZ-AGENT.md self-modification** `[x]` (completed 2026-02-25): `src/identity/writer.ts` — atomic write functions with backup to `runtime/config-backups/`. Used by BIG_BROTHER.
 - **(10)** **Pre-Execution Semantic Review** `[x]` (completed 2026-02-25): `src/agents/semantic-review.ts` — stubbed gate (off by default). Wired into `compile()` after validation, before execution.
+- **(10.5)** **Integration Test Harness** `[x]` (completed 2026-03-11): `src/io/TestAdapter.ts` — IOAdapter collecting all output into inspectable arrays. `src/io/MockLLMClient.ts` — pattern-matched mock LLM client returning agent-appropriate responses. `src/integration/pipeline.integration.test.ts` — 5 smoke tests: basic request/response, script execution, review chain, FAFC escalation (mock-only), DW trigger (mock-only). Separate vitest config (`vitest.integration.config.ts`). `npm run test:integration` / `npm run test:all`. `USE_REAL_LLM=1` runs tests 1–3 with real API; 4–5 skip.
 
 *Tier 4 — Async + Initiatives.* Task list: [`tasks-tier4-async-initiatives.md`](tasks/tasks-tier4-async-initiatives.md)
 
