@@ -28,6 +28,9 @@ const skipReview = process.argv.includes("--no-review");
 const verboseMode = process.argv.includes("--verbose");
 if (verboseMode) setVerbose(true);
 
+// TODO: Read AGENT_NAME from SOUL.md once the identity system exposes a parsed name field.
+const AGENT_NAME = "writ";
+
 async function appendLog(entry: Record<string, unknown>): Promise<void> {
   await mkdir(LOGS_DIR, { recursive: true });
   const line = JSON.stringify({ timestamp: easternTimestamp(), ...entry });
@@ -36,8 +39,7 @@ async function appendLog(entry: Record<string, unknown>): Promise<void> {
 
 async function main(): Promise<void> {
   const adapter = createCLIAdapter({
-    // TODO: Make this the name of the Agent as named by the user (probably from SOUL.md)
-    prompt: "writ> ",
+    prompt: `${AGENT_NAME}> `,
   });
 
   adapter.sendStatus(`Writ v${VERSION}`);
