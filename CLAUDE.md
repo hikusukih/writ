@@ -85,7 +85,7 @@ The General Planner partitions work into high-level assignments; the Lieutenant 
 - `src/io/CLIAdapter.ts` — `createCLIAdapter()` CLI implementation of IOAdapter
 - `src/io/TestAdapter.ts` — `TestAdapter` IOAdapter for tests: collects all output into inspectable arrays, configurable `requestConfirmation()`
 - `src/io/MockLLMClient.ts` — `MockLLMClient` pattern-matched mock LLM client for integration tests; configurable per-agent responses
-- `src/integration/pipeline.integration.test.ts` — 5 smoke tests exercising the full Orch → GP → LP → Executor → Compiler pipeline
+- `src/integration/pipeline.integration.test.ts` — 8 smoke tests exercising the full Orch → GP → LP → Executor → Compiler pipeline
 - `src/jobs/types.ts` — `Job`, `JobType`, `JobStatus`, `Callback`, `StatementRef` types
 - `src/jobs/store.ts` — `createJobStore()` persistent job store in `runtime/jobs/`
 - `src/jobs/scheduler.ts` — `createScheduler()` DAG scheduler with dependency resolution

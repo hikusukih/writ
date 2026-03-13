@@ -36,7 +36,7 @@ See `CLAUDE.md` for the full source file map.
 | Review Sampling Rate | Built — Phase 3 Tier 3 (completed 2026-02-25) |
 | Identity Writer (atomic config writes + backups) | Built — Phase 3 Tier 3 (completed 2026-02-25) |
 | Pre-Execution Semantic Review (stubbed gate) | Built — Phase 3 Tier 3 (completed 2026-02-25) |
-| Integration Test Harness (`TestAdapter`, `MockLLMClient`, 5 smoke tests) | Built — Phase 3 Tier 3 (completed 2026-03-11) |
+| Integration Test Harness (`TestAdapter`, `MockLLMClient`, 8 smoke tests) | Built — Phase 3 Tier 3 (completed 2026-03-11) |
 | Job Graph & Scheduler | Partial — types, store, scheduler core built (2026-02-25); orchestrator refactor + DefaultJobExecutor pending |
 | Initiative system | Phase 3 — Tier 4 |
 | USER.md | Phase 3 — Tier 6 |
