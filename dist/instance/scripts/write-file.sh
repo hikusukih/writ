@@ -4,7 +4,8 @@
 # @param FILE_PATH Path to the file to write
 # @param CONTENT Content to write to the file
 
-ALLOWED_ROOT="/home/dmb/code/domestiClaw"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+ALLOWED_ROOT="${WRIT_ALLOWED_ROOT:-$(cd "$SCRIPT_DIR/../../.." && pwd)}"
 
 if [ -z "$FILE_PATH" ]; then
   echo "Error: FILE_PATH is required" >&2
@@ -25,5 +26,6 @@ if [[ "$resolved_parent" != "$ALLOWED_ROOT"* ]]; then
   exit 1
 fi
 
-echo "$CONTENT" > "$FILE_PATH"
+mkdir -p "$resolved_parent" || { echo "Error: failed to create directory '$resolved_parent'" >&2; exit 1; }
+printf '%s' "$CONTENT" > "$FILE_PATH" || { echo "Error: failed to write to '$FILE_PATH'" >&2; exit 1; }
 echo "Written to $FILE_PATH"

@@ -29,6 +29,46 @@
         "canRead": ["SOUL.md", "CONSTITUTION.md", "registry.json", "runtime/plans/"],
         "canWrite": ["runtime/plans/"]
       }
+    },
+    {
+      "id": "developer-writer",
+      "name": "Developer/Writer",
+      "class": "action",
+      "configFile": "developer-writer-agent.md",
+      "permissions": {
+        "canRead": ["SOUL.md", "CONSTITUTION.md", "registry.json", "src/instance/scripts/"],
+        "canWrite": ["runtime/staging/scripts/", "src/instance/scripts/"]
+      }
+    },
+    {
+      "id": "lieutenant-planner",
+      "name": "Lieutenant Planner",
+      "class": "planner",
+      "configFile": "lieutenant-planner-agent.md",
+      "permissions": {
+        "canRead": ["SOUL.md", "CONSTITUTION.md", "registry.json", "runtime/plans/", "src/instance/scripts/"],
+        "canWrite": ["runtime/plans/"]
+      }
+    },
+    {
+      "id": "reviewer-reviewer",
+      "name": "Reviewer-Reviewer",
+      "class": "os",
+      "configFile": "reviewer-reviewer-agent.md",
+      "permissions": {
+        "canRead": ["SOUL.md", "CONSTITUTION.md", "runtime/logs/"],
+        "canWrite": ["runtime/logs/"]
+      }
+    },
+    {
+      "id": "big-brother",
+      "name": "BIG_BROTHER",
+      "class": "action",
+      "configFile": "big-brother-agent.md",
+      "permissions": {
+        "canRead": ["SOUL.md", "CONSTITUTION.md", "registry.json", "agents/"],
+        "canWrite": ["agents/", "runtime/config-backups/"]
+      }
     }
   ]
 }

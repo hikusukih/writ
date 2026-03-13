@@ -1,4 +1,4 @@
-import { readFile } from "node:fs/promises";
+import { readFile, readdir } from "node:fs/promises";
 import { join } from "node:path";
 import { AgentRegistrySchema } from "../schemas.js";
 export async function loadIdentity(basePath) {
@@ -16,7 +16,33 @@ export async function loadIdentity(basePath) {
             agentMd,
         };
     }));
-    return { soul, constitution, agents };
+    // Load reviewer configs for each registered agent (graceful degradation — not required)
+    const reviewerConfigs = {};
+    await Promise.all(registry.agents.map(async (entry) => {
+        const reviewerPath = join(basePath, "agents", `${entry.id}-reviewer-agent.md`);
+        try {
+            reviewerConfigs[entry.id] = await readFile(reviewerPath, "utf-8");
+        }
+        catch {
+            // Reviewer config is optional — skip if not present
+        }
+    }));
+    // Load anti-pattern files (graceful — directory may not exist)
+    const antiPatterns = {};
+    try {
+        const antiPatternsDir = join(basePath, "anti-patterns");
+        const files = await readdir(antiPatternsDir);
+        await Promise.all(files
+            .filter((f) => f.startsWith("anti-patterns-") && f.endsWith(".md"))
+            .map(async (f) => {
+            const agentId = f.replace("anti-patterns-", "").replace(".md", "");
+            antiPatterns[agentId] = await readFile(join(antiPatternsDir, f), "utf-8");
+        }));
+    }
+    catch {
+        // Anti-patterns directory is optional — skip if not present
+    }
+    return { soul, constitution, agents, reviewerConfigs, antiPatterns };
 }
 export function getAgentConfig(identity, agentId) {
     const config = identity.agents.find((a) => a.id === agentId);

@@ -10,15 +10,20 @@ function extractResponse(response) {
         outputTokens: response.usage.output_tokens,
     };
 }
+const DEFAULT_CLAUDE_MODEL = "claude-haiku-4-5-20251001";
+function getClaudeModel() {
+    return process.env.CLAUDE_MODEL ?? DEFAULT_CLAUDE_MODEL;
+}
 export function createClaudeClient(apiKey) {
     const client = new Anthropic({
         apiKey: apiKey ?? process.env.ANTHROPIC_API_KEY,
     });
     return {
         async sendMessage(systemPrompt, userMessage) {
-            verbose("Claude API: sendMessage", { model: "claude-sonnet-4-20250514", systemPromptLength: systemPrompt.length, userMessage });
+            const model = getClaudeModel();
+            verbose("Claude API: sendMessage", { model, systemPromptLength: systemPrompt.length, userMessage });
             const response = await client.messages.create({
-                model: "claude-sonnet-4-20250514",
+                model,
                 max_tokens: 4096,
                 system: systemPrompt,
                 messages: [{ role: "user", content: userMessage }],
@@ -28,9 +33,10 @@ export function createClaudeClient(apiKey) {
             return result;
         },
         async sendMessages(systemPrompt, messages) {
-            verbose("Claude API: sendMessages", { model: "claude-sonnet-4-20250514", systemPromptLength: systemPrompt.length, messageCount: messages.length });
+            const model = getClaudeModel();
+            verbose("Claude API: sendMessages", { model, systemPromptLength: systemPrompt.length, messageCount: messages.length });
             const response = await client.messages.create({
-                model: "claude-sonnet-4-20250514",
+                model,
                 max_tokens: 4096,
                 system: systemPrompt,
                 messages,
@@ -46,7 +52,7 @@ export function getActiveModel() {
     if (provider === "ollama") {
         return `ollama/${process.env.OLLAMA_MODEL ?? "llama3.2"}`;
     }
-    return "claude-sonnet-4-20250514";
+    return getClaudeModel();
 }
 export function createLLMClient() {
     const provider = process.env.LLM_PROVIDER ?? "anthropic";
