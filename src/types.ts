@@ -214,4 +214,6 @@ export interface OrchestratorResult {
   provenance: ProvenanceEntry[];
   /** Compact summary of scripts that ran this turn (for conversation history context) */
   sideEffects?: string;
+  /** Raw script execution results (stdout/stderr/exitCode) for audit logging */
+  scriptResults?: ScriptResult[];
 }

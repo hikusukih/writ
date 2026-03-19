@@ -190,5 +190,10 @@ export async function handleRequest(
 
   const sideEffects = buildSideEffectSummary(allExecutionResults);
 
-  return { response, provenance, sideEffects: sideEffects || undefined };
+  return {
+    response,
+    provenance,
+    sideEffects: sideEffects || undefined,
+    scriptResults: allResults.length > 0 ? allResults : undefined,
+  };
 }

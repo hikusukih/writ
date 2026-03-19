@@ -34,6 +34,24 @@ async function appendLog(entry: Record<string, unknown>): Promise<void> {
   await appendFile(resolve(LOGS_DIR, "agent.jsonl"), line + "\n");
 }
 
+async function appendExecutionLog(
+  input: string,
+  scriptResults: Array<{ scriptId: string; exitCode: number; stdout: string; stderr: string }>
+): Promise<void> {
+  await mkdir(LOGS_DIR, { recursive: true });
+  for (const r of scriptResults) {
+    const line = JSON.stringify({
+      timestamp: easternTimestamp(),
+      input,
+      scriptId: r.scriptId,
+      exitCode: r.exitCode,
+      stdout: r.stdout,
+      stderr: r.stderr,
+    });
+    await appendFile(resolve(LOGS_DIR, "execution-output.jsonl"), line + "\n");
+  }
+}
+
 async function main(): Promise<void> {
   const adapter = createCLIAdapter({
     // TODO: Make this the name of the Agent as named by the user (probably from SOUL.md)
@@ -166,6 +184,10 @@ async function main(): Promise<void> {
         review: skipReview ? "skipped" : "allow",
         durationMs: Date.now() - startTime,
       });
+
+      if (result.scriptResults) {
+        await appendExecutionLog(input, result.scriptResults);
+      }
 
       // Fire-and-forget: sample a recent review decision for RR audit (don't block REPL)
       if (!skipReview) {
