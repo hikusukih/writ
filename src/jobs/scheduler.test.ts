@@ -171,4 +171,41 @@ describe("scheduler", () => {
     expect(result.status).toBe("completed");
     expect(result.result).toBe("waited-result");
   });
+
+  it("waitForJob rejects on timeout", async () => {
+    const executor: JobExecutor = {
+      async execute() {
+        await new Promise((r) => setTimeout(r, 500));
+        return "done";
+      },
+    };
+    scheduler = createScheduler(store, executor, undefined, { tickIntervalMs: 10 });
+
+    const job = await scheduler.submitJob(makePartial());
+    const runPromise = scheduler.run();
+
+    await expect(scheduler.waitForJob(job.id, 50)).rejects.toThrow(/timed out/i);
+    await runPromise;
+  });
+
+  it("failed job stays failed and dependents become blocked", async () => {
+    const executor: JobExecutor = {
+      async execute(job: Job) {
+        if (job.goal === "A") throw new Error("A exploded");
+        return "done";
+      },
+    };
+    scheduler = createScheduler(store, executor, undefined, { tickIntervalMs: 10 });
+
+    const a = await scheduler.submitJob(makePartial({ goal: "A" }));
+    await scheduler.submitJob(makePartial({ goal: "B", dependsOn: [a.id] }));
+
+    await scheduler.run();
+
+    const jobs = await store.getAll();
+    const jobA = jobs.find((j) => j.goal === "A")!;
+    const jobB = jobs.find((j) => j.goal === "B")!;
+    expect(jobA.status).toBe("failed");
+    expect(jobB.status).toBe("blocked");
+  });
 });

@@ -4,7 +4,7 @@ import type { JobStore } from "./store.js";
 import { verbose, easternTimestamp } from "../logger.js";
 
 export interface JobExecutor {
-  execute(job: Job): Promise<unknown>;
+  execute(job: Job, adapter: IOAdapter | undefined): Promise<unknown>;
 }
 
 export interface Scheduler {
@@ -12,11 +12,13 @@ export interface Scheduler {
   run(): Promise<void>;
   submitJob(partial: Omit<Job, "id" | "status" | "timestamps">): Promise<Job>;
   waitForJob(id: string, timeoutMs?: number): Promise<Job>;
+  getStore(): JobStore;
 }
 
 export interface SchedulerOptions {
   concurrencyLimit?: number;
   tickIntervalMs?: number;
+  onNotify?: (job: Job) => void;
 }
 
 export function createScheduler(
@@ -25,7 +27,7 @@ export function createScheduler(
   adapter: IOAdapter | undefined,
   options: SchedulerOptions = {}
 ): Scheduler {
-  const { concurrencyLimit = 3, tickIntervalMs = 100 } = options;
+  const { concurrencyLimit = 3, tickIntervalMs = 100, onNotify } = options;
 
   // Waiters: callbacks waiting for specific jobs to finish
   const waiters = new Map<string, Array<(job: Job) => void>>();
@@ -55,6 +57,7 @@ export function createScheduler(
           });
         } else if (cb.action === "notify_orchestrator") {
           verbose("Scheduler: notify_orchestrator callback", { jobId: job.id });
+          onNotify?.(job);
         } else if (cb.action === "update_initiative") {
           verbose("Scheduler: update_initiative callback", { jobId: job.id, payload: cb.payload });
         }
@@ -68,6 +71,16 @@ export function createScheduler(
     }
   }
 
+  async function blockDependents(failedId: string): Promise<void> {
+    const all = await store.getAll();
+    for (const job of all) {
+      if (job.status === "pending" && job.dependsOn.includes(failedId)) {
+        await store.updateJob(job.id, { status: "blocked" });
+        await blockDependents(job.id);
+      }
+    }
+  }
+
   async function executeJob(job: Job): Promise<void> {
     verbose("Scheduler: starting job", { id: job.id, type: job.type });
     const updated = await store.updateJob(job.id, {
@@ -76,7 +89,7 @@ export function createScheduler(
     });
 
     try {
-      const result = await executor.execute(updated);
+      const result = await executor.execute(updated, adapter);
       const completed = await store.updateJob(job.id, {
         status: "completed",
         result,
@@ -92,6 +105,7 @@ export function createScheduler(
         timestamps: { ...updated.timestamps, completed: easternTimestamp() },
       });
       verbose("Scheduler: job failed", { id: job.id, error: err instanceof Error ? err.message : String(err) });
+      await blockDependents(job.id);
       await processCallbacks(failed);
       notifyWaiters(failed);
     }
@@ -127,6 +141,10 @@ export function createScheduler(
 
     async submitJob(partial) {
       return store.createJob(partial);
+    },
+
+    getStore() {
+      return store;
     },
 
     waitForJob(id, timeoutMs = 30000) {
