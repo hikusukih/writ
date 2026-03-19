@@ -118,7 +118,7 @@ The General Planner partitions work into high-level assignments; the Lieutenant 
 - **Functional style**: Export functions, not classes. `LLMClient` is an interface for mockability.
 - **Zod validation**: All JSON read from disk or parsed from Claude responses validated with Zod schemas.
 - **Tests alongside source**: `foo.ts` → `foo.test.ts` in same directory. Vitest with mocked Claude client.
-- **Integration tests**: `src/integration/*.integration.test.ts` — run via `npm run test:integration`. Use `TestAdapter` + `MockLLMClient` for full pipeline coverage without process spawning. `npm test` excludes these; `npm run test:all` includes both.
+- **Integration tests**: `src/integration/*.integration.test.ts` — run via `npm run test:integration`. Use `TestAdapter` + `MockLLMClient` for full pipeline coverage without process spawning. `npm test` excludes these; `npm run test:all` includes both. **When implementing a new feature, add or extend an integration test in `src/integration/pipeline.integration.test.ts` to cover the happy path through the full pipeline.**
 - **Script frontmatter**: Shell scripts use `# @name`, `# @description`, `# @param` comment headers for discovery.
 
 ## Workflow Commands
