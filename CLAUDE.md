@@ -137,13 +137,9 @@ Every new feature that touches the pipeline requires an integration test in `src
 ## Workflow Commands
 
 Custom slash commands in `.claude/commands/`:
-- `/create-prd` — Generate a PRD from a feature description (asks clarifying questions first)
-- `/generate-tasks` — Generate a task list from a PRD (two-phase: parent tasks → sub-tasks with user approval)
-- `/process-task-list` — Work through a task list one sub-task at a time, committing after each parent task completes
-- `/fold-in` — Apply queued changes from `docs/working/fold-me-in.md` into architecture and planning docs, then run a consistency review
-- `/reconcile-docs` — Code-first documentation reconciliation pass; updates docs to match source tree
-
-When starting a new feature, the workflow is: `/create-prd` → `/generate-tasks` → `/process-task-list`.
+- `/rectify` — Scan for inconsistencies between the documentation and the actual codebase, then print a summary report
+- `/summarize` — Produce a development summary covering the current state of the repository (recent PRs, open issues, build status, etc.)
+- `/state-of-system` — Generate `docs/STATE_OF_SYSTEM.md` by inspecting the actual codebase directly
 
 ## Documentation Conventions
 
