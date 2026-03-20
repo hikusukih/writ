@@ -173,10 +173,11 @@ writ/
 │   ├── io/                    #   I/O abstraction layer
 │   │   ├── IOAdapter.ts       #     IOAdapter interface
 │   │   └── CLIAdapter.ts      #     CLI implementation (readline + console)
-│   └── jobs/                  #   Job graph system (Tier 4, partially built)
+│   └── jobs/                  #   Job graph system
 │       ├── types.ts           #     Job, JobType, JobStatus, Callback types
 │       ├── store.ts           #     Persistent job store (runtime/jobs/)
-│       └── scheduler.ts       #     DAG scheduler with dependency resolution
+│       ├── scheduler.ts       #     DAG scheduler with dependency resolution
+│       └── defaultExecutor.ts #     Routes job types to pipeline agents (GP/LP/DW/Executor/Compiler)
 │
 │ ── INSTANCE OUTPUT (ephemeral, gitignored) ──────────────────────
 │

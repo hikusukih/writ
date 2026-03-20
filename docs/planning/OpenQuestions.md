@@ -442,9 +442,9 @@ whether token counts are captured there before building something new.
 See [JobGraph.md](../architecture/JobGraph.md) for the full architecture spec.
 
 **Open:**
-- **Job store format (JSON vs SQLite)**: JSON files to start; revisit if query performance becomes an issue during Tier 4 implementation.
-- **Scheduler lifecycle (persistent loop vs on-demand)**: Persistent loop within Node process for initial implementation.
-- **Partial result delivery**: Wait for full graph completion before synthesizing response; partial delivery is a future UX refinement.
+- **Job store format (JSON vs SQLite)**: JSON files to start; revisit if query performance becomes an issue during Tier 4 implementation. *(Decided: JSON files — `src/jobs/store.ts` uses one JSON file per job in `runtime/jobs/`. Completed 2026-03-20.)*
+- **Scheduler lifecycle (persistent loop vs on-demand)**: Persistent loop within Node process for initial implementation. *(Decided: persistent in-process loop — `createScheduler()` runs a tick loop until all jobs complete. Completed 2026-03-20.)*
+- **Partial result delivery**: Wait for full graph completion before synthesizing response; partial delivery is a future UX refinement. *(Decided: wait for full graph — Orchestrator collects all job results before the final LLM synthesis call. Completed 2026-03-20.)*
 - **Job expiry/cleanup**: Retention policy for completed jobs TBD.
 
 ---
