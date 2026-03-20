@@ -57,7 +57,7 @@ ${resultLines}
 
 Provide a brief, natural-language response to the user summarizing what was done and what the results mean. Be concise and helpful.`;
 }
-export async function handleRequest(client, userInput, identity, scriptsDir, plansDir, history, skipReview, adapter, scheduler) {
+export async function handleRequest(client, userInput, identity, scriptsDir, plansDir, history, skipReview, adapter, scheduler, options) {
     const provenance = [];
     // Step 1: Orchestrator interprets user intent
     const orchestratorConfig = getAgentConfig(identity, "orchestrator");
@@ -96,18 +96,40 @@ export async function handleRequest(client, userInput, identity, scriptsDir, pla
     let activeScheduler = scheduler;
     let tmpJobsDir;
     if (!activeScheduler) {
-        tmpJobsDir = await mkdtemp(join(tmpdir(), "writ-orch-jobs-"));
-        const store = await createJobStore(tmpJobsDir);
-        const executor = createDefaultJobExecutor({ client, identity, scriptsDir, plansDir, skipReview });
+        const dir = await mkdtemp(join(tmpdir(), "writ-orch-jobs-"));
+        tmpJobsDir = dir;
+        const store = await createJobStore(dir);
+        const executor = createDefaultJobExecutor({
+            client,
+            identity,
+            scriptsDir,
+            plansDir,
+            skipReview,
+            getStore: () => store,
+        });
         activeScheduler = createScheduler(store, executor, adapter);
     }
-    // Step 3: For each assignment, route LP + execute through the scheduler
+    // Channel from the originating adapter — used for all jobs created in this request
+    const channel = adapter?.getChannel() ?? [];
+    // Step 3: Submit all jobs as a DAG upfront, then let the scheduler handle ordering.
+    //
+    // For each assignment we create two jobs:
+    //   plan job  →  execute job (depends on plan job)
+    //
+    // The execute job has no plan attached at submission time; DefaultJobExecutor
+    // will resolve it from the plan job's result when the execute job runs.
+    //
+    // This allows multiple assignments to run their planning phases in parallel,
+    // and their execution phases in parallel once planning completes.
     const allExecutionResults = [];
     const allResults = [];
     try {
+        const jobPairs = [];
         for (const assignment of strategicPlan.assignments) {
-            verbose("Orchestrator: processing assignment via scheduler", { id: assignment.id, description: assignment.description });
-            // Submit a "plan" job for the Lieutenant Planner (includes DW integration)
+            verbose("Orchestrator: submitting jobs for assignment", {
+                id: assignment.id,
+                description: assignment.description,
+            });
             const planJob = await activeScheduler.submitJob({
                 type: "plan",
                 goal: assignment.description,
@@ -115,38 +137,74 @@ export async function handleRequest(client, userInput, identity, scriptsDir, pla
                 createdBy: "orchestrator",
                 evidence: [],
                 callbacks: [],
-                channel: [],
+                channel,
             });
-            await activeScheduler.tick();
-            const completedPlanJob = await activeScheduler.waitForJob(planJob.id);
-            if (completedPlanJob.status === "failed") {
-                const errMsg = completedPlanJob.result?.error ?? "unknown error";
-                throw new Error(`Plan job for assignment ${assignment.id} failed: ${errMsg}`);
-            }
-            const lpResult = completedPlanJob.result;
-            provenance.push({
-                agentId: "lieutenant-planner",
-                action: `created detailed plan ${lpResult.plan.id} for assignment ${assignment.id}`,
-                output: lpResult.plan.description,
-            });
-            // Submit an "execute_script" job with the plan from LP
-            verbose("Orchestrator: executing plan via scheduler", { planId: lpResult.plan.id, steps: lpResult.plan.steps.length });
+            // Execute job depends on the plan job so the scheduler runs them in order.
+            // The plan is resolved at runtime from the plan job's result.
             const execJob = await activeScheduler.submitJob({
                 type: "execute_script",
-                goal: `Execute plan ${lpResult.plan.id}`,
-                plan: lpResult.plan,
-                dependsOn: [],
+                goal: `Execute plan for: ${assignment.description}`,
+                dependsOn: [planJob.id],
                 createdBy: "orchestrator",
                 evidence: [],
                 callbacks: [],
-                channel: [],
+                channel,
+                // plan deliberately omitted — resolved by DefaultJobExecutor from dependency result
             });
-            await activeScheduler.tick();
-            const completedExecJob = await activeScheduler.waitForJob(execJob.id);
+            jobPairs.push({ planJob, execJob });
+        }
+        // Start the scheduler run loop in the background. It ticks until all jobs finish.
+        activeScheduler.run().catch((err) => {
+            verbose("Orchestrator: scheduler run error (non-blocking)", err instanceof Error ? err.message : String(err));
+        });
+        // Throbber timeout: race each waitForJob() against the configured timeout.
+        // On the first timeout, send an acknowledgment and continue waiting.
+        // If we sent an ack, deliver the final result asynchronously via adapter.sendResult().
+        const throbberMs = options?.throbberTimeoutMs ?? 10_000;
+        let sentAck = false;
+        async function waitWithThrobber(jobId, jobType) {
+            const timeout = options?.jobTypeTimeouts?.[jobType] ?? throbberMs;
+            try {
+                return await Promise.race([
+                    activeScheduler.waitForJob(jobId, 300_000),
+                    new Promise((_, reject) => setTimeout(() => reject(new Error("__throbber_timeout__")), timeout)),
+                ]);
+            }
+            catch (err) {
+                if (err instanceof Error && err.message === "__throbber_timeout__") {
+                    if (!sentAck && adapter) {
+                        sentAck = true;
+                        await adapter.sendAcknowledgment("Working on it, I'll follow up when done");
+                    }
+                    // Wait for real completion — no additional throbber timeout from here
+                    return activeScheduler.waitForJob(jobId, 300_000);
+                }
+                throw err;
+            }
+        }
+        // Wait for all exec jobs and collect results
+        for (const { planJob, execJob } of jobPairs) {
+            const completedExecJob = await waitWithThrobber(execJob.id, execJob.type);
             if (completedExecJob.status === "failed") {
                 const errMsg = completedExecJob.result?.error ?? "unknown error";
-                throw new Error(`Execute job for plan ${lpResult.plan.id} failed: ${errMsg}`);
+                throw new Error(`Execute job ${execJob.id} failed: ${errMsg}`);
             }
+            // Look up the completed plan job for provenance
+            const completedPlanJob = await activeScheduler.getStore().getJob(planJob.id);
+            if (completedPlanJob?.status === "failed") {
+                const errMsg = completedPlanJob.result?.error ?? "unknown error";
+                throw new Error(`Plan job ${planJob.id} failed: ${errMsg}`);
+            }
+            const lpResult = completedPlanJob?.result;
+            if (!lpResult) {
+                throw new Error(`Plan job ${planJob.id} completed but has no result`);
+            }
+            provenance.push({
+                agentId: "lieutenant-planner",
+                action: `created detailed plan ${lpResult.plan.id}`,
+                output: lpResult.plan.description,
+                jobId: planJob.id,
+            });
             const executionResult = completedExecJob.result;
             verbose("Orchestrator: execution results", executionResult.results);
             const scriptsSummary = executionResult.results
@@ -156,6 +214,8 @@ export async function handleRequest(client, userInput, identity, scriptsDir, pla
                 agentId: "executor",
                 action: `executed plan ${lpResult.plan.id}`,
                 output: scriptsSummary,
+                jobId: execJob.id,
+                parentJobId: planJob.id,
             });
             allExecutionResults.push(executionResult);
             allResults.push(...executionResult.results);
@@ -175,5 +235,16 @@ export async function handleRequest(client, userInput, identity, scriptsDir, pla
     // Review the final response before returning to caller
     await applyReview(response, identity, { client, skipReview, adapter, subjectAgentId: "orchestrator" });
     const sideEffects = buildSideEffectSummary(allExecutionResults);
-    return { response, provenance, sideEffects: sideEffects || undefined };
+    // If we already sent an acknowledgment, deliver the result asynchronously via the adapter
+    // so the user gets the final response even though the REPL already moved on.
+    if (sentAck && adapter) {
+        const chain = provenance.map((p) => p.agentId).join(" → ");
+        await adapter.sendResult(response, chain);
+    }
+    return {
+        response,
+        provenance,
+        sideEffects: sideEffects || undefined,
+        didAck: sentAck || undefined,
+    };
 }

@@ -86,5 +86,8 @@ export function createCLIAdapter(options = {}) {
             rl?.close();
             rl = null;
         },
+        getChannel() {
+            return ["cli"];
+        },
     };
 }

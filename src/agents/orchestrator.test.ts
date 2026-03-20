@@ -101,6 +101,7 @@ describe("handleRequest", () => {
       scriptsDir,
       plansDir,
       skipReview: true,
+      getStore: () => store,
     });
     return createScheduler(store, executor, undefined);
   }
@@ -395,6 +396,7 @@ describe("handleRequest", () => {
       scriptsDir,
       plansDir,
       skipReview: true,
+      getStore: () => store,
     });
     const testScheduler = createScheduler(store, executor, undefined);
 

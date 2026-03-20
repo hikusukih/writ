@@ -4,15 +4,26 @@ import { createDetailedPlanWithDW } from "../agents/lieutenant-planner.js";
 import { createStrategicPlan } from "../agents/planner.js";
 import { listScripts } from "../scripts/index.js";
 export function createDefaultJobExecutor(deps) {
-    const { client, identity, scriptsDir, plansDir, skipReview } = deps;
+    const { client, identity, scriptsDir, plansDir, skipReview, getStore } = deps;
     return {
         async execute(job, adapter) {
             switch (job.type) {
                 case "execute_script": {
-                    if (!job.plan) {
+                    let plan = job.plan ?? null;
+                    // If no plan is directly attached, attempt to resolve it from the first dependency job's result.
+                    // This supports DAG submission where the execute job is created before the plan job completes.
+                    if (!plan && job.dependsOn.length > 0 && getStore) {
+                        const store = getStore();
+                        const depJob = await store.getJob(job.dependsOn[0]);
+                        if (depJob?.result) {
+                            const lpResult = depJob.result;
+                            plan = lpResult.plan ?? null;
+                        }
+                    }
+                    if (!plan) {
                         throw new Error(`Job "${job.id}" (execute_script) requires a plan but none was provided`);
                     }
-                    return executeFromPlan(job.plan, scriptsDir, plansDir);
+                    return executeFromPlan(plan, scriptsDir, plansDir);
                 }
                 case "develop_script": {
                     const existingScripts = await listScripts(scriptsDir);

@@ -137,6 +137,10 @@ export interface ProvenanceEntry {
   agentId: string;
   action: string;
   output?: string;
+  /** Job ID that produced this provenance entry */
+  jobId?: string;
+  /** Parent job ID (for child jobs spawned by another job) */
+  parentJobId?: string;
 }
 
 export interface DeveloperWriterRequest {
@@ -214,4 +218,6 @@ export interface OrchestratorResult {
   provenance: ProvenanceEntry[];
   /** Compact summary of scripts that ran this turn (for conversation history context) */
   sideEffects?: string;
+  /** True when the result was delivered asynchronously via adapter.sendResult() (throbber path) */
+  didAck?: boolean;
 }

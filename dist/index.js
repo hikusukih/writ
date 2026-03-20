@@ -64,6 +64,7 @@ async function main() {
         scriptsDir: SCRIPTS_DIR,
         plansDir: PLANS_DIR,
         skipReview,
+        getStore: () => jobStore,
     });
     const scheduler = createScheduler(jobStore, jobExecutor, adapter);
     if (skipReview)
@@ -126,9 +127,12 @@ async function main() {
             conversationHistory.push({ role: "user", content: input }, { role: "assistant", content: assistantContent });
             // Persist session to disk (fire-and-forget — don't block the REPL)
             saveSession(SESSIONS_DIR, conversationHistory).catch((err) => adapter.sendError(`[sessions] Failed to save session: ${err}`));
-            // Display response and provenance
-            const chain = result.provenance.map((p) => p.agentId).join(" → ");
-            adapter.sendResult(result.response, chain);
+            // Display response and provenance.
+            // If the throbber fired (slow job), handleRequest() already called sendResult() on the adapter.
+            if (!result.didAck) {
+                const chain = result.provenance.map((p) => p.agentId).join(" → ");
+                adapter.sendResult(result.response, chain);
+            }
             await appendLog({
                 input,
                 model,

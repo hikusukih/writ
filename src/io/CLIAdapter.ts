@@ -105,5 +105,9 @@ export function createCLIAdapter(options: CLIAdapterOptions = {}): IOAdapter {
       rl?.close();
       rl = null;
     },
+
+    getChannel(): string[] {
+      return ["cli"];
+    },
   };
 }
