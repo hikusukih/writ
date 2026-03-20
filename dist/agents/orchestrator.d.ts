@@ -8,4 +8,15 @@ export declare function buildSideEffectSummary(executionResults: ExecutionResult
 export declare function buildInterpretPrompt(userInput: string): string;
 /** Build the prompt for the final response-generation LLM call */
 export declare function buildResponsePrompt(userInput: string, taskDescription: string, strategicDescription: string, allResults: ScriptResult[]): string;
-export declare function handleRequest(client: LLMClient, userInput: string, identity: IdentityContext, scriptsDir: string, plansDir: string, history?: MessageParam[], skipReview?: boolean, adapter?: IOAdapter, scheduler?: Scheduler): Promise<OrchestratorResult>;
+/**
+ * Options for throbber timeout behaviour.
+ * When a job takes longer than the timeout, the orchestrator sends an
+ * acknowledgment and delivers the result asynchronously via adapter.sendResult().
+ */
+export interface OrchestratorOptions {
+    /** Default throbber timeout in ms. Defaults to 10 000 ms. */
+    throbberTimeoutMs?: number;
+    /** Per-job-type overrides for the throbber timeout. */
+    jobTypeTimeouts?: Partial<Record<string, number>>;
+}
+export declare function handleRequest(client: LLMClient, userInput: string, identity: IdentityContext, scriptsDir: string, plansDir: string, history?: MessageParam[], skipReview?: boolean, adapter?: IOAdapter, scheduler?: Scheduler, options?: OrchestratorOptions): Promise<OrchestratorResult>;

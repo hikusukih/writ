@@ -42,5 +42,8 @@ export function createTestAdapter(options = {}) {
         stop() {
             // No-op
         },
+        getChannel() {
+            return ["test"];
+        },
     };
 }
