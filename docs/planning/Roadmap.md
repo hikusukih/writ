@@ -37,7 +37,7 @@ See `CLAUDE.md` for the full source file map.
 | Identity Writer (atomic config writes + backups) | Built — Phase 3 Tier 3 (completed 2026-02-25) |
 | Pre-Execution Semantic Review (stubbed gate) | Built — Phase 3 Tier 3 (completed 2026-02-25) |
 | Integration Test Harness (`TestAdapter`, `MockLLMClient`, 5 smoke tests) | Built — Phase 3 Tier 3 (completed 2026-03-11) |
-| Job Graph & Scheduler | Partial — types, store, scheduler core built (2026-02-25); orchestrator refactor + DefaultJobExecutor pending |
+| Job Graph & Scheduler | Built — Phase 3 Tier 4 (completed 2026-03-20) |
 | Initiative system | Phase 3 — Tier 4 |
 | USER.md | Phase 3 — Tier 6 |
 | Adjutant | Phase 3 — Tier 5 |
@@ -154,7 +154,7 @@ These require the full Phase 2 review chain before they're safe to build. Develo
 
 *Tier 4 is the architectural transition point: the linear GP → LP → Executor pipeline is replaced by job-based dispatch. After Tier 4, all execution routes through the Job Graph.*
 
-- **(11)** **Job Graph & Scheduler** `[ ]`: `src/jobs/` — Job types (`execute_script`, `develop_script`, `plan`, `notify_user`, `replan`, `initiative_setup`). Monotonic IDs for cycle prevention. Persistent store in `runtime/jobs/`. DAG scheduler with dependency resolution, concurrent execution (default limit 3), callbacks. Orchestrator refactored to job-based dispatch with backward compat. Throbber/ack pattern: configurable timeout per job type, synchronous UX for fast jobs, async follow-up for slow ones. See [JobGraph.md](../architecture/JobGraph.md) for the architecture spec.
+- **(11)** **Job Graph & Scheduler** `[x]` (completed 2026-03-20): `src/jobs/` — Job types (`execute_script`, `develop_script`, `plan`, `notify_user`, `replan`, `initiative_setup`). Monotonic IDs for cycle prevention. Persistent store in `runtime/jobs/`. DAG scheduler with dependency resolution, concurrent execution (default limit 3), callbacks. Orchestrator refactored to job-based dispatch; `DefaultJobExecutor` routes job types to GP/LP/DW/Executor/Compiler. Throbber/ack pattern: configurable timeout per job type, synchronous UX for fast jobs, async follow-up for slow ones. Channel routing via `IOAdapter.getChannel()`. See [JobGraph.md](../architecture/JobGraph.md) for the architecture spec.
 - **(12)** **User Statement Log** *(Backlog)* `[ ]`: `src/statements/` — append-only log in `runtime/statements/`. N:N evidence join between jobs and statements. Supersession lifecycle. Wired into Orchestrator for statement extraction. See [`backlog-statement-log.md`](backlog/backlog-statement-log.md).
 - **(13)** **Initiative Table & Persistence** *(Backlog)* `[ ]`: `src/initiatives/` — persistent table in `runtime/initiatives/`. Cron expressions, architecture types, stop conditions. Separate from job store. See [`backlog-initiative-table.md`](backlog/backlog-initiative-table.md).
 - **(14)** **Initiative system** `[ ]`: InitiativeBuilder agent registered in `registry.json`. LLM determines initiative parameters from Orchestrator-identified patterns. Non-Static architectures route through HJA. Cron trigger stub (checked per orchestrator tick, not system cron). See [OpenQuestions.md §Initiatives](OpenQuestions.md#initiatives).

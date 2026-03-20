@@ -36,16 +36,19 @@ Requires `ANTHROPIC_API_KEY` in `.env` (copy `.env.example`).
 
 ### Current Wiring
 ```
-User input → Orchestrator (interprets intent)
-           → General Planner (produces StrategicPlan with WorkAssignments)
-           → Lieutenant Planner (per assignment: detailed Plan with script-level steps)
-             → Developer/Writer (if LP detects missing scripts: generate → review → promote)
-           → Executor (maps plan to instruction JSON)
-           → Compiler (validates + composes + runs scripts)
+User input → Orchestrator (interprets intent, creates job DAG)
+           → Scheduler (dependency resolution, concurrent execution)
+           → DefaultJobExecutor (routes by job type to GP/LP/DW/Executor/Compiler)
+               → General Planner (produces StrategicPlan with WorkAssignments)
+               → Lieutenant Planner (per assignment: detailed Plan with script-level steps)
+                 → Developer/Writer (if LP detects missing scripts: generate → review → promote)
+               → Executor (maps plan to instruction JSON)
+               → Compiler (validates + composes + runs scripts)
+           → Results collected across all jobs
            → Orchestrator (LLM call: interprets results → natural-language response)
            → Response with provenance chain
 ```
-The General Planner partitions work into high-level assignments; the Lieutenant Planner produces script-level execution plans for each. If LP needs scripts that don't exist, Developer/Writer generates them (capped at 3 per invocation). After execution, the Orchestrator makes a final LLM call to synthesize a natural-language response. Multi-assignment plans collect results from all LP → Executor chains.
+The Scheduler is now the execution backbone. The Orchestrator creates a job DAG and hands it to the Scheduler, which resolves dependencies and runs jobs concurrently (default limit 3). `DefaultJobExecutor` dispatches each job type to the appropriate pipeline agent. Fast jobs respond synchronously; slow jobs send an acknowledgement and deliver results async (throbber pattern). Channel routing uses `getChannel()` on `IOAdapter`. Multi-assignment plans collect results from all LP → Executor chains.
 
 **Review chain**: `handleRequest()` reviews the orchestrator's task description and final response using LLM-backed `applyReview()`. `applyReview(content, identity, options?)` uses a `ReviewOptions` object: `{ client?, skipReview?, adapter?, subjectAgentId?, logsDir?, sampling? }`. Calls `reviewWithLLM()` (which passes SOUL.md + CONSTITUTION.md + per-agent anti-patterns to Claude) when an LLMClient is provided; falls back to rule-based `reviewOutput()` on failure. FAFC decisions route through the Human-Judgment Agent (`handleFAFC()`) when an IOAdapter is available; without an adapter, FAFC falls back to halt. The `--no-review` flag bypasses all review. Review decisions are logged to `runtime/logs/review-decisions.jsonl` for RR auditing.
 
@@ -81,14 +84,15 @@ The General Planner partitions work into high-level assignments; the Lieutenant 
 - `src/compiler/compiler.ts` — [*Compiler*](docs/dictionary.md): validates instruction JSON, optional semantic review gate, runs scripts
 - `src/scripts/runner.ts` — Shell script execution with timeout (internal to *Compiler*)
 - `src/scripts/index.ts` — [*Script*](docs/dictionary.md) discovery via `@name`/`@description`/`@param` frontmatter
-- `src/io/IOAdapter.ts` — `IOAdapter` interface for messaging abstraction
+- `src/io/IOAdapter.ts` — `IOAdapter` interface for messaging abstraction; `getChannel()` returns the active channel for job routing
 - `src/io/CLIAdapter.ts` — `createCLIAdapter()` CLI implementation of IOAdapter
 - `src/io/TestAdapter.ts` — `TestAdapter` IOAdapter for tests: collects all output into inspectable arrays, configurable `requestConfirmation()`
 - `src/test-utils/MockLLMClient.ts` — `MockLLMClient` pattern-matched mock LLM client for integration tests; configurable per-agent responses
 - `src/integration/pipeline.integration.test.ts` — 5 smoke tests exercising the full Orch → GP → LP → Executor → Compiler pipeline
 - `src/jobs/types.ts` — `Job`, `JobType`, `JobStatus`, `Callback`, `StatementRef` types
 - `src/jobs/store.ts` — `createJobStore()` persistent job store in `runtime/jobs/`
-- `src/jobs/scheduler.ts` — `createScheduler()` DAG scheduler with dependency resolution
+- `src/jobs/scheduler.ts` — `createScheduler()` DAG scheduler with dependency resolution, concurrent execution (default limit 3), callbacks
+- `src/jobs/defaultExecutor.ts` — `createDefaultJobExecutor()`, routes job types to pipeline agents (GP, LP, DW, Executor, Compiler)
 - `src/logger.ts` — `setVerbose()`, `isVerbose()`, `verbose()` logging utilities
 - `src/sessions.ts` — `loadSession()`/`saveSession()` for persisting conversation history to `runtime/sessions/`
 
