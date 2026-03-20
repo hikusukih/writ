@@ -1,8 +1,9 @@
 import type { JobExecutor } from "./scheduler.js";
+import type { JobStore } from "./store.js";
 import type { Job } from "./types.js";
 import type { IOAdapter } from "../io/IOAdapter.js";
 import type { LLMClient } from "../agents/claude-client.js";
-import type { IdentityContext, WorkAssignment } from "../types.js";
+import type { IdentityContext, LieutenantPlanResult, WorkAssignment } from "../types.js";
 import { executeFromPlan } from "../agents/executor.js";
 import { generateScript } from "../agents/developer-writer.js";
 import { createDetailedPlanWithDW } from "../agents/lieutenant-planner.js";
@@ -15,6 +16,8 @@ export interface DefaultJobExecutorDeps {
   scriptsDir: string;
   plansDir: string;
   skipReview?: boolean;
+  /** Optional store accessor so execute_script jobs can resolve their plan from a dependency job result */
+  getStore?: () => JobStore;
 }
 
 export interface DefaultJobExecutor extends JobExecutor {
@@ -24,16 +27,29 @@ export interface DefaultJobExecutor extends JobExecutor {
 export function createDefaultJobExecutor(
   deps: DefaultJobExecutorDeps
 ): DefaultJobExecutor {
-  const { client, identity, scriptsDir, plansDir, skipReview } = deps;
+  const { client, identity, scriptsDir, plansDir, skipReview, getStore } = deps;
 
   return {
     async execute(job: Job, adapter: IOAdapter | undefined): Promise<unknown> {
       switch (job.type) {
         case "execute_script": {
-          if (!job.plan) {
+          let plan = job.plan ?? null;
+
+          // If no plan is directly attached, attempt to resolve it from the first dependency job's result.
+          // This supports DAG submission where the execute job is created before the plan job completes.
+          if (!plan && job.dependsOn.length > 0 && getStore) {
+            const store = getStore();
+            const depJob = await store.getJob(job.dependsOn[0]);
+            if (depJob?.result) {
+              const lpResult = depJob.result as LieutenantPlanResult;
+              plan = lpResult.plan ?? null;
+            }
+          }
+
+          if (!plan) {
             throw new Error(`Job "${job.id}" (execute_script) requires a plan but none was provided`);
           }
-          return executeFromPlan(job.plan, scriptsDir, plansDir);
+          return executeFromPlan(plan, scriptsDir, plansDir);
         }
 
         case "develop_script": {

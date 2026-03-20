@@ -78,6 +78,7 @@ async function main(): Promise<void> {
     scriptsDir: SCRIPTS_DIR,
     plansDir: PLANS_DIR,
     skipReview,
+    getStore: () => jobStore,
   });
   const scheduler = createScheduler(jobStore, jobExecutor, adapter);
 
@@ -169,9 +170,12 @@ async function main(): Promise<void> {
         adapter.sendError(`[sessions] Failed to save session: ${err}`)
       );
 
-      // Display response and provenance
-      const chain = result.provenance.map((p) => p.agentId).join(" → ");
-      adapter.sendResult(result.response, chain);
+      // Display response and provenance.
+      // If the throbber fired (slow job), handleRequest() already called sendResult() on the adapter.
+      if (!result.didAck) {
+        const chain = result.provenance.map((p) => p.agentId).join(" → ");
+        adapter.sendResult(result.response, chain);
+      }
 
       await appendLog({
         input,

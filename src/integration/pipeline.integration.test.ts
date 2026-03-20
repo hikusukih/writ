@@ -27,6 +27,9 @@ import { createMockLLMClient } from "../test-utils/MockLLMClient.js";
 import { createJobStore } from "../jobs/store.js";
 import { createScheduler } from "../jobs/scheduler.js";
 import { createDefaultJobExecutor } from "../jobs/defaultExecutor.js";
+import type { JobExecutor } from "../jobs/scheduler.js";
+import type { Job } from "../jobs/types.js";
+import type { IOAdapter } from "../io/IOAdapter.js";
 import type { LLMClient } from "../agents/claude-client.js";
 import type { IdentityContext } from "../types.js";
 
@@ -425,6 +428,7 @@ describe("7. Orchestrator → Scheduler → DefaultJobExecutor", () => {
           scriptsDir: INSTANCE_SCRIPTS_DIR,
           plansDir,
           skipReview: false,
+          getStore: () => store,
         });
         const scheduler = createScheduler(store, executor, adapter);
 
@@ -516,6 +520,323 @@ describe("6. DefaultJobExecutor + Scheduler", () => {
       } finally {
         await rm(jobsDir, { recursive: true, force: true });
         await rm(plansDir, { recursive: true, force: true });
+      }
+    },
+    30_000
+  );
+});
+
+// ---------------------------------------------------------------------------
+// Test 8 — Throbber Timeout  (mock-only, Task 4.4)
+//
+// Validates: when a job takes longer than throbberTimeoutMs, the orchestrator
+// sends an acknowledgment and later delivers the result via adapter.sendResult().
+// ---------------------------------------------------------------------------
+
+describe("8. Throbber Timeout", () => {
+  it.skipIf(USE_REAL_LLM)(
+    "sends acknowledgment for slow jobs and delivers result via adapter.sendResult()",
+    async () => {
+      const plansDir = await makeTmpPlansDir();
+      const jobsDir = await mkdtemp(join(tmpdir(), "writ-integ-throbber-jobs-"));
+
+      try {
+        const client = createMockLLMClient();
+        const adapter = createTestAdapter();
+
+        const store = await createJobStore(jobsDir);
+        const realExecutor = createDefaultJobExecutor({
+          client,
+          identity,
+          scriptsDir: INSTANCE_SCRIPTS_DIR,
+          plansDir,
+          skipReview: true,
+          getStore: () => store,
+        });
+
+        // Wrap the real executor with a 500 ms artificial delay so the throbber fires
+        const slowExecutor: JobExecutor = {
+          async execute(job: Job, adp: IOAdapter | undefined): Promise<unknown> {
+            await new Promise<void>((r) => setTimeout(r, 500));
+            return realExecutor.execute(job, adp);
+          },
+        };
+
+        const scheduler = createScheduler(store, slowExecutor, adapter, { tickIntervalMs: 50 });
+
+        const result = await handleRequest(
+          client,
+          "Hello, who are you?",
+          identity,
+          INSTANCE_SCRIPTS_DIR,
+          plansDir,
+          undefined,
+          /* skipReview */ true,
+          adapter,
+          scheduler,
+          { throbberTimeoutMs: 50 }  // fires well before the 500 ms executor delay
+        );
+
+        // Acknowledgment must have been sent
+        expect(adapter.collected.acknowledgments.length).toBeGreaterThanOrEqual(1);
+        expect(adapter.collected.acknowledgments[0]).toContain("Working on it");
+
+        // handleRequest() delivered the result asynchronously
+        expect(result.didAck).toBe(true);
+        expect(adapter.collected.results.length).toBeGreaterThanOrEqual(1);
+
+        // The return value still carries the response
+        expect(result.response).toBeTruthy();
+        expect(adapter.collected.errors).toHaveLength(0);
+      } finally {
+        await rm(plansDir, { recursive: true, force: true });
+        await rm(jobsDir, { recursive: true, force: true });
+      }
+    },
+    10_000
+  );
+
+  it.skipIf(USE_REAL_LLM)(
+    "responds synchronously (no ack) when job completes within the timeout",
+    async () => {
+      const plansDir = await makeTmpPlansDir();
+      const jobsDir = await mkdtemp(join(tmpdir(), "writ-integ-throbber-fast-"));
+
+      try {
+        const client = createMockLLMClient();
+        const adapter = createTestAdapter();
+
+        const store = await createJobStore(jobsDir);
+        const executor = createDefaultJobExecutor({
+          client,
+          identity,
+          scriptsDir: INSTANCE_SCRIPTS_DIR,
+          plansDir,
+          skipReview: true,
+          getStore: () => store,
+        });
+        const scheduler = createScheduler(store, executor, adapter, { tickIntervalMs: 50 });
+
+        const result = await handleRequest(
+          client,
+          "Hello, who are you?",
+          identity,
+          INSTANCE_SCRIPTS_DIR,
+          plansDir,
+          undefined,
+          true,
+          adapter,
+          scheduler,
+          { throbberTimeoutMs: 10_000 }  // large timeout — should not fire
+        );
+
+        // No acknowledgment sent (job completed within timeout)
+        expect(adapter.collected.acknowledgments).toHaveLength(0);
+        expect(result.didAck).toBeFalsy();
+        // sendResult() not called by orchestrator — result returned normally
+        expect(adapter.collected.results).toHaveLength(0);
+        expect(result.response).toBeTruthy();
+      } finally {
+        await rm(plansDir, { recursive: true, force: true });
+        await rm(jobsDir, { recursive: true, force: true });
+      }
+    },
+    30_000
+  );
+});
+
+// ---------------------------------------------------------------------------
+// Test 9 — Multi-Job DAG Execution  (mock-only, Task 5.3)
+//
+// Validates: orchestrator submits plan + execute jobs as a dependency DAG,
+// both jobs complete in order, and the final result is returned.
+// ---------------------------------------------------------------------------
+
+describe("9. Multi-Job DAG Execution", () => {
+  it.skipIf(USE_REAL_LLM)(
+    "submits plan and execute jobs as a DAG and completes both in dependency order",
+    async () => {
+      const plansDir = await makeTmpPlansDir();
+      const jobsDir = await mkdtemp(join(tmpdir(), "writ-integ-dag-jobs-"));
+
+      try {
+        const client = createMockLLMClient();
+        const adapter = createTestAdapter();
+
+        const store = await createJobStore(jobsDir);
+        const executor = createDefaultJobExecutor({
+          client,
+          identity,
+          scriptsDir: INSTANCE_SCRIPTS_DIR,
+          plansDir,
+          skipReview: true,
+          getStore: () => store,
+        });
+        const scheduler = createScheduler(store, executor, adapter);
+
+        const result = await handleRequest(
+          client,
+          "List the files in the project root",
+          identity,
+          INSTANCE_SCRIPTS_DIR,
+          plansDir,
+          undefined,
+          true,
+          adapter,
+          scheduler
+        );
+
+        // Pipeline completes successfully
+        expect(result.response).toBeTruthy();
+        expect(adapter.collected.errors).toHaveLength(0);
+
+        // At least plan + execute jobs were created per assignment
+        const jobs = await store.getAll();
+        expect(jobs.length).toBeGreaterThanOrEqual(2);
+
+        const planJobs = jobs.filter((j) => j.type === "plan");
+        const execJobs = jobs.filter((j) => j.type === "execute_script");
+        expect(planJobs.length).toBeGreaterThanOrEqual(1);
+        expect(execJobs.length).toBeGreaterThanOrEqual(1);
+
+        // All jobs completed
+        const allCompleted = jobs.every((j) => j.status === "completed");
+        expect(allCompleted).toBe(true);
+
+        // Execute job depends on plan job (DAG edge)
+        const execJob = execJobs[0];
+        const planJob = planJobs[0];
+        expect(execJob.dependsOn).toContain(planJob.id);
+
+        // Plan job has a lower numeric ID than the execute job (DAG ordering check)
+        const planNum = parseInt(planJob.id.replace("job-", ""), 10);
+        const execNum = parseInt(execJob.id.replace("job-", ""), 10);
+        expect(planNum).toBeLessThan(execNum);
+      } finally {
+        await rm(plansDir, { recursive: true, force: true });
+        await rm(jobsDir, { recursive: true, force: true });
+      }
+    },
+    30_000
+  );
+});
+
+// ---------------------------------------------------------------------------
+// Test 10 — Channel Routing  (mock-only, Task 5.5)
+//
+// Validates: jobs created by the orchestrator carry a non-empty channel array
+// populated from the originating adapter.
+// ---------------------------------------------------------------------------
+
+describe("10. Channel Routing", () => {
+  it.skipIf(USE_REAL_LLM)(
+    "jobs created by the orchestrator carry the adapter channel",
+    async () => {
+      const plansDir = await makeTmpPlansDir();
+      const jobsDir = await mkdtemp(join(tmpdir(), "writ-integ-channel-jobs-"));
+
+      try {
+        const client = createMockLLMClient();
+        const adapter = createTestAdapter();
+
+        // TestAdapter.getChannel() returns ["test"]
+        expect(adapter.getChannel()).toEqual(["test"]);
+
+        const store = await createJobStore(jobsDir);
+        const executor = createDefaultJobExecutor({
+          client,
+          identity,
+          scriptsDir: INSTANCE_SCRIPTS_DIR,
+          plansDir,
+          skipReview: true,
+          getStore: () => store,
+        });
+        const scheduler = createScheduler(store, executor, adapter);
+
+        await handleRequest(
+          client,
+          "Hello, who are you?",
+          identity,
+          INSTANCE_SCRIPTS_DIR,
+          plansDir,
+          undefined,
+          true,
+          adapter,
+          scheduler
+        );
+
+        // Every job created by the orchestrator should carry the adapter channel
+        const jobs = await store.getAll();
+        expect(jobs.length).toBeGreaterThan(0);
+        for (const job of jobs) {
+          expect(job.channel).toEqual(["test"]);
+        }
+      } finally {
+        await rm(plansDir, { recursive: true, force: true });
+        await rm(jobsDir, { recursive: true, force: true });
+      }
+    },
+    30_000
+  );
+});
+
+// ---------------------------------------------------------------------------
+// Test 11 — Provenance Chain with Job IDs  (mock-only, Task 5.6)
+//
+// Validates: provenance entries include jobId, and executor entry references
+// the parent plan job via parentJobId.
+// ---------------------------------------------------------------------------
+
+describe("11. Provenance Chain with Job IDs", () => {
+  it.skipIf(USE_REAL_LLM)(
+    "provenance entries include jobId and executor entry references parent plan job",
+    async () => {
+      const plansDir = await makeTmpPlansDir();
+      const jobsDir = await mkdtemp(join(tmpdir(), "writ-integ-prov-jobs-"));
+
+      try {
+        const client = createMockLLMClient();
+        const adapter = createTestAdapter();
+
+        const store = await createJobStore(jobsDir);
+        const executor = createDefaultJobExecutor({
+          client,
+          identity,
+          scriptsDir: INSTANCE_SCRIPTS_DIR,
+          plansDir,
+          skipReview: true,
+          getStore: () => store,
+        });
+        const scheduler = createScheduler(store, executor, adapter);
+
+        const result = await handleRequest(
+          client,
+          "List the files in the project root",
+          identity,
+          INSTANCE_SCRIPTS_DIR,
+          plansDir,
+          undefined,
+          true,
+          adapter,
+          scheduler
+        );
+
+        // lieutenant-planner provenance entry carries jobId
+        const lpEntry = result.provenance.find((p) => p.agentId === "lieutenant-planner");
+        expect(lpEntry).toBeDefined();
+        expect(lpEntry?.jobId).toBeTruthy();
+
+        // executor provenance entry carries jobId AND parentJobId
+        const execEntry = result.provenance.find((p) => p.agentId === "executor");
+        expect(execEntry).toBeDefined();
+        expect(execEntry?.jobId).toBeTruthy();
+        expect(execEntry?.parentJobId).toBeTruthy();
+
+        // executor's parentJobId matches lieutenant-planner's jobId
+        expect(execEntry?.parentJobId).toBe(lpEntry?.jobId);
+      } finally {
+        await rm(plansDir, { recursive: true, force: true });
+        await rm(jobsDir, { recursive: true, force: true });
       }
     },
     30_000

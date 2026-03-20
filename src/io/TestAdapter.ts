@@ -82,5 +82,9 @@ export function createTestAdapter(options: TestAdapterOptions = {}): TestAdapter
     stop(): void {
       // No-op
     },
+
+    getChannel(): string[] {
+      return ["test"];
+    },
   };
 }

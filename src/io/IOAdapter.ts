@@ -45,4 +45,12 @@ export interface IOAdapter {
 
   /** Gracefully stop the adapter. */
   stop(): void;
+
+  /**
+   * Return the channel identifier(s) for this adapter instance.
+   * Used to route async results back to the originating source.
+   * Example: ["cli"] for CLIAdapter, ["test"] for TestAdapter,
+   * ["slack", "channel-id"] for a future Slack adapter.
+   */
+  getChannel(): string[];
 }
