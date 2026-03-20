@@ -44,21 +44,25 @@ See `CLAUDE.md` for the full source file map.
 
 ---
 
-## Current Build State (Phase 3 Tier 3)
+## Current Build State (Phase 3 Tier 4)
 
 ```mermaid
 graph LR
     User(["User"]) --> Orch["Orchestrator"]
     Orch --> Rev1["LLM Reviewer"]
     Rev1 --> GP["General Planner"]
-    GP --> LP["Lieutenant Planner"]
+    GP -->|"WorkAssignments"| Sched["Scheduler"]
+    Sched --> DJE["DefaultJobExecutor"]
+    DJE --> LP["Lieutenant Planner"]
     LP -->|"if missing"| DW["Developer/Writer"]
     DW --> DWRev["LLM Reviewer"]
     DWRev --> LP
     LP --> Exec["Executor"]
     Exec --> Compiler["Compiler"]
     Compiler -->|"runs"| Scripts[/"Scripts"/]
-    Scripts --> Orch
+    Scripts -->|"results"| Sched
+    Sched -->|"fast: sync"| Orch
+    Sched -.->|"slow: async ack"| User
     Orch --> Rev2["LLM Reviewer"]
     Rev2 --> User
 
@@ -74,11 +78,11 @@ graph LR
 
     classDef built fill:#2d6a4f,color:#fff,stroke:#1b4332
     classDef support fill:#1b4332,color:#ccc,stroke:#1b4332
-    class User,Orch,Rev1,GP,LP,DW,DWRev,Exec,Compiler,Scripts,Rev2,HJA built
+    class User,Orch,Rev1,GP,Sched,DJE,LP,DW,DWRev,Exec,Compiler,Scripts,Rev2,HJA built
     class RL,RR,BB,Configs support
 ```
 
-*LLM Reviewer runs at multiple points: after Orchestrator (before GP), after Developer/Writer (before promotion), and after final response (before User). FAFC decisions route through the Human-Judgment Agent. Review decisions are logged; Reviewer-Reviewer samples and audits them, flagging BIG_BROTHER for config updates. Rule-Based Reviewer is the fast fallback at all review points.*
+*The Scheduler is the execution backbone. Orchestrator calls the General Planner to partition work into WorkAssignments, then creates a job DAG and submits it to the Scheduler. DefaultJobExecutor routes each job type to the appropriate pipeline agent. Fast jobs (under 10 s) respond synchronously; slow jobs send an async acknowledgement and deliver results when complete (throbber pattern). LLM Reviewer runs after Orchestrator (before GP) and after final response (before User). Developer/Writer reviewer runs before script promotion. FAFC decisions route through the Human-Judgment Agent. Review decisions are logged; Reviewer-Reviewer samples and audits them, flagging BIG_BROTHER for config updates. Rule-Based Reviewer is the fast fallback at all review points.*
 
 ---
 
@@ -106,7 +110,7 @@ graph LR
 
 ### 2.6 Configurable ALLOWED_ROOT + Bootstrap Scripts `[x]` (completed 2026-02-20)
 - `ALLOWED_ROOT` computed from `$0` at runtime; overridable via `WRIT_ALLOWED_ROOT`
-- 3 new bootstrap scripts: `git-status`, `append-file`, `search-content`
+- 6 bootstrap scripts: `git-status`, `append-file`, `search-content`, `list-files`, `read-file`, `write-file`
 
 ### 2.6.5 XYZ-AGENT.md Rewrite `[x]` (completed 2026-02-20)
 - Rewrote per-agent config files as LLM-optimized prompts
