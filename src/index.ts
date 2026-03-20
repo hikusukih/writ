@@ -13,6 +13,9 @@ import { sampleAndAudit } from "./agents/reviewer-reviewer.js";
 import { setVerbose, verbose, easternTimestamp } from "./logger.js";
 import type { IdentityContext } from "./types.js";
 import { createCLIAdapter } from "./io/CLIAdapter.js";
+import { createJobStore } from "./jobs/store.js";
+import { createScheduler } from "./jobs/scheduler.js";
+import { createDefaultJobExecutor } from "./jobs/defaultExecutor.js";
 
 config(); // Load .env
 
@@ -23,6 +26,7 @@ const SCRIPTS_DIR = resolve(__dirname, "instance", "scripts");
 const PLANS_DIR = resolve("runtime/plans");
 const LOGS_DIR = resolve("runtime/logs");
 const SESSIONS_DIR = resolve("runtime/sessions");
+const JOBS_DIR = resolve("runtime/jobs");
 
 const skipReview = process.argv.includes("--no-review");
 const verboseMode = process.argv.includes("--verbose");
@@ -59,6 +63,7 @@ async function main(): Promise<void> {
   }
 
   await mkdir(PLANS_DIR, { recursive: true });
+  await mkdir(JOBS_DIR, { recursive: true });
 
   const client = createLLMClient();
   const model = getActiveModel();
@@ -66,6 +71,16 @@ async function main(): Promise<void> {
   adapter.sendStatus(
     `Provider: ${process.env.LLM_PROVIDER ?? "anthropic"} | Model: ${model}`
   );
+  const jobStore = await createJobStore(JOBS_DIR);
+  const jobExecutor = createDefaultJobExecutor({
+    client,
+    identity,
+    scriptsDir: SCRIPTS_DIR,
+    plansDir: PLANS_DIR,
+    skipReview,
+  });
+  const scheduler = createScheduler(jobStore, jobExecutor, adapter);
+
   if (skipReview) adapter.sendStatus("[--no-review] Reviewer disabled.");
   if (verboseMode)
     adapter.sendStatus("[--verbose] Verbose mode on — detailed trace goes to stderr.");
@@ -128,7 +143,8 @@ async function main(): Promise<void> {
         PLANS_DIR,
         conversationHistory,
         skipReview,
-        adapter
+        adapter,
+        scheduler
       );
 
       verbose("handleRequest result", {

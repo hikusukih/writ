@@ -22,6 +22,12 @@ export interface IOAdapter {
   /** Display a status or informational message (startup info, confirmations, etc.). */
   sendStatus(message: string): void | Promise<void>;
 
+  /** Acknowledge receipt of a request (e.g. "request received, processing…"). */
+  sendAcknowledgment(message: string): void | Promise<void>;
+
+  /** Report progress on an in-flight job. */
+  sendProgress(jobId: string, message: string): void | Promise<void>;
+
   /** Register a handler for inbound requests. Called once before start(). */
   onRequest(handler: (input: string) => Promise<void>): void;
 

@@ -6,6 +6,9 @@ import { handleRequest, buildInterpretPrompt, buildResponsePrompt, buildSideEffe
 import { ReviewHaltError } from "./reviewed.js";
 import type { LLMClient, MessageParam } from "./claude-client.js";
 import type { ExecutionResult, IdentityContext } from "../types.js";
+import { createJobStore } from "../jobs/store.js";
+import { createScheduler, type Scheduler } from "../jobs/scheduler.js";
+import { createDefaultJobExecutor } from "../jobs/defaultExecutor.js";
 
 const mockIdentity: IdentityContext = {
   soul: "# Soul\nBe helpful.",
@@ -59,13 +62,17 @@ function detailedPlanJson(slug: string, desc: string, scriptId: string, params: 
 describe("handleRequest", () => {
   let scriptsDir: string;
   let plansDir: string;
+  let jobsDir: string;
+  let scheduler: Scheduler;
 
   beforeAll(async () => {
     const testDir = await mkdtemp(join(tmpdir(), "writ-orch-"));
     scriptsDir = join(testDir, "scripts");
     plansDir = join(testDir, "plans");
+    jobsDir = join(testDir, "jobs");
     await mkdir(scriptsDir, { recursive: true });
     await mkdir(plansDir, { recursive: true });
+    await mkdir(jobsDir, { recursive: true });
 
     await writeFile(
       join(scriptsDir, "echo-msg.sh"),
@@ -84,6 +91,19 @@ describe("handleRequest", () => {
     const testDir = join(scriptsDir, "..");
     await rm(testDir, { recursive: true });
   });
+
+  // Helper: build a fresh scheduler per test (fresh job store to avoid ID collisions)
+  async function makeScheduler(client: LLMClient): Promise<Scheduler> {
+    const store = await createJobStore(await mkdtemp(join(tmpdir(), "writ-orch-jobs-")));
+    const executor = createDefaultJobExecutor({
+      client,
+      identity: mockIdentity,
+      scriptsDir,
+      plansDir,
+      skipReview: true,
+    });
+    return createScheduler(store, executor, undefined);
+  }
 
   // With skipReview and the new pipeline, LLM calls are:
   // 1: orchestrator interpret
@@ -116,8 +136,10 @@ describe("handleRequest", () => {
       async sendMessages() { callCount++; return mockResponse(callCount); },
     };
 
+    scheduler = await makeScheduler(client);
+
     const result = await handleRequest(
-      client, "say hello", mockIdentity, scriptsDir, plansDir, undefined, true
+      client, "say hello", mockIdentity, scriptsDir, plansDir, undefined, true, undefined, scheduler
     );
 
     expect(result.response).toContain("Hello from Writ!");
@@ -144,8 +166,10 @@ describe("handleRequest", () => {
       async sendMessages() { callCount++; return mockResponse(callCount); },
     };
 
+    scheduler = await makeScheduler(client);
+
     const result = await handleRequest(
-      client, "what scripts do you have?", mockIdentity, scriptsDir, plansDir, undefined, true
+      client, "what scripts do you have?", mockIdentity, scriptsDir, plansDir, undefined, true, undefined, scheduler
     );
 
     expect(result.provenance[0].action).toBe("interpreted user request");
@@ -184,8 +208,10 @@ describe("handleRequest", () => {
       { role: "assistant", content: "Found: echo-msg.sh" },
     ];
 
+    scheduler = await makeScheduler(client);
+
     await handleRequest(
-      client, "show me the first one", mockIdentity, scriptsDir, plansDir, history, true
+      client, "show me the first one", mockIdentity, scriptsDir, plansDir, history, true, undefined, scheduler
     );
 
     expect(capturedMessages.length).toBe(3);
@@ -215,7 +241,9 @@ describe("handleRequest", () => {
       async sendMessages() { usedSendMessages = true; return { content: "should not be called", inputTokens: 0, outputTokens: 0 }; },
     };
 
-    await handleRequest(client, "hello", mockIdentity, scriptsDir, plansDir, undefined, true);
+    scheduler = await makeScheduler(client);
+
+    await handleRequest(client, "hello", mockIdentity, scriptsDir, plansDir, undefined, true, undefined, scheduler);
     expect(usedSendMessage).toBe(true);
     expect(usedSendMessages).toBe(false);
   });
@@ -236,7 +264,9 @@ describe("handleRequest", () => {
       async sendMessages() { return { content: "should not be called", inputTokens: 0, outputTokens: 0 }; },
     };
 
-    const result = await handleRequest(client, "echo hello", mockIdentity, scriptsDir, plansDir, undefined, true);
+    scheduler = await makeScheduler(client);
+
+    const result = await handleRequest(client, "echo hello", mockIdentity, scriptsDir, plansDir, undefined, true, undefined, scheduler);
     expect(result.sideEffects).toBeDefined();
     expect(result.sideEffects).toContain("echo-msg");
     expect(result.sideEffects).toContain("MSG=hello");
@@ -271,6 +301,7 @@ describe("handleRequest", () => {
       async sendMessages() { return { content: "should not be called", inputTokens: 0, outputTokens: 0 }; },
     };
 
+    // For the review test, use the auto-created scheduler (no skipReview)
     await expect(
       handleRequest(client, "do something", mockIdentity, scriptsDir, plansDir)
     ).rejects.toThrow(ReviewHaltError);
@@ -292,8 +323,10 @@ describe("handleRequest", () => {
       async sendMessages() { return { content: "should not be called", inputTokens: 0, outputTokens: 0 }; },
     };
 
+    scheduler = await makeScheduler(client);
+
     const result = await handleRequest(
-      client, "do something", mockIdentity, scriptsDir, plansDir, undefined, true
+      client, "do something", mockIdentity, scriptsDir, plansDir, undefined, true, undefined, scheduler
     );
     expect(result.response).toContain("sudo");
   });
@@ -326,8 +359,10 @@ describe("handleRequest", () => {
       async sendMessages() { return { content: "should not be called", inputTokens: 0, outputTokens: 0 }; },
     };
 
+    scheduler = await makeScheduler(client);
+
     const result = await handleRequest(
-      client, "do two things", mockIdentity, scriptsDir, plansDir, undefined, true
+      client, "do two things", mockIdentity, scriptsDir, plansDir, undefined, true, undefined, scheduler
     );
 
     expect(result.response).toContain("Both tasks completed");
@@ -335,6 +370,44 @@ describe("handleRequest", () => {
     expect(result.provenance.length).toBe(6);
     expect(result.provenance.filter((p) => p.agentId === "lieutenant-planner")).toHaveLength(2);
     expect(result.provenance.filter((p) => p.agentId === "executor")).toHaveLength(2);
+  });
+
+  it("routes request through scheduler when scheduler is provided", async () => {
+    let callCount = 0;
+    const client: LLMClient = {
+      async sendMessage() {
+        callCount++;
+        if (callCount === 1) return { content: "Echo a message", inputTokens: 50, outputTokens: 10 };
+        if (callCount === 2) return { content: JSON.stringify(strategicPlanJson("sched", "Scheduler test")), inputTokens: 100, outputTokens: 50 };
+        if (callCount === 3) return {
+          content: JSON.stringify(detailedPlanJson("sched", "Echo", "echo-msg", { MSG: "via scheduler" })),
+          inputTokens: 100, outputTokens: 50,
+        };
+        return { content: "Echoed via scheduler.", inputTokens: 50, outputTokens: 10 };
+      },
+      async sendMessages() { return { content: "should not be called", inputTokens: 0, outputTokens: 0 }; },
+    };
+
+    const store = await createJobStore(await mkdtemp(join(tmpdir(), "writ-orch-sched-")));
+    const executor = createDefaultJobExecutor({
+      client,
+      identity: mockIdentity,
+      scriptsDir,
+      plansDir,
+      skipReview: true,
+    });
+    const testScheduler = createScheduler(store, executor, undefined);
+
+    const result = await handleRequest(
+      client, "echo via scheduler", mockIdentity, scriptsDir, plansDir, undefined, true, undefined, testScheduler
+    );
+
+    expect(result.response).toContain("scheduler");
+    expect(result.provenance.some((p) => p.agentId === "lieutenant-planner")).toBe(true);
+    expect(result.provenance.some((p) => p.agentId === "executor")).toBe(true);
+    // Verify jobs were created in the store
+    const jobs = await store.getAll();
+    expect(jobs.length).toBeGreaterThanOrEqual(2); // plan job + execute job
   });
 });
 

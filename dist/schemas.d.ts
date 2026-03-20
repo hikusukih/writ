@@ -1,68 +1,29 @@
-import { z } from "zod";
-export declare const InstructionStepSchema: z.ZodObject<{
-    scriptId: z.ZodString;
-    params: z.ZodRecord<z.ZodString, z.ZodString>;
-    order: z.ZodNumber;
-}, z.core.$strip>;
-export declare const InstructionFileSchema: z.ZodObject<{
-    planId: z.ZodString;
-    steps: z.ZodArray<z.ZodObject<{
-        scriptId: z.ZodString;
-        params: z.ZodRecord<z.ZodString, z.ZodString>;
-        order: z.ZodNumber;
-    }, z.core.$strip>>;
-}, z.core.$strip>;
-export declare const AgentRegistryEntrySchema: z.ZodObject<{
-    id: z.ZodString;
-    name: z.ZodString;
-    class: z.ZodEnum<{
-        os: "os";
-        planner: "planner";
-        action: "action";
-    }>;
-    configFile: z.ZodString;
-    permissions: z.ZodObject<{
-        canRead: z.ZodArray<z.ZodString>;
-        canWrite: z.ZodArray<z.ZodString>;
-    }, z.core.$strip>;
-}, z.core.$strip>;
-export declare const AgentRegistrySchema: z.ZodObject<{
-    agents: z.ZodArray<z.ZodObject<{
-        id: z.ZodString;
-        name: z.ZodString;
-        class: z.ZodEnum<{
-            os: "os";
-            planner: "planner";
-            action: "action";
-        }>;
-        configFile: z.ZodString;
-        permissions: z.ZodObject<{
-            canRead: z.ZodArray<z.ZodString>;
-            canWrite: z.ZodArray<z.ZodString>;
-        }, z.core.$strip>;
-    }, z.core.$strip>>;
-}, z.core.$strip>;
-export declare const AgentOutputSchema: z.ZodObject<{
-    content: z.ZodString;
-    thought: z.ZodOptional<z.ZodString>;
-    usage: z.ZodObject<{
-        inputTokens: z.ZodNumber;
-        outputTokens: z.ZodNumber;
-    }, z.core.$strip>;
-}, z.core.$strip>;
-export declare const PlanStepSchema: z.ZodObject<{
-    description: z.ZodString;
-    scriptId: z.ZodOptional<z.ZodString>;
-    params: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodString>>;
-    order: z.ZodNumber;
-}, z.core.$strip>;
-export declare const PlanSchema: z.ZodObject<{
-    id: z.ZodString;
-    description: z.ZodString;
-    steps: z.ZodArray<z.ZodObject<{
-        description: z.ZodString;
-        scriptId: z.ZodOptional<z.ZodString>;
-        params: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodString>>;
-        order: z.ZodNumber;
-    }, z.core.$strip>>;
-}, z.core.$strip>;
+export declare const InstructionStepSchema: any;
+export declare const InstructionFileSchema: any;
+export declare const AgentRegistryEntrySchema: any;
+export declare const AgentRegistrySchema: any;
+export declare const AgentOutputSchema: any;
+export declare const PlanStepSchema: any;
+export declare const WorkAssignmentSchema: any;
+export declare const PlanSchema: any;
+export declare const StrategicPlanSchema: any;
+export declare const MessageParamSchema: any;
+export declare const SessionSchema: any;
+export declare const ReviewDecisionSchema: any;
+export declare const ScriptInfoSchema: any;
+export declare const DeveloperWriterRequestSchema: any;
+export declare const DeveloperWriterResultSchema: any;
+export declare const ReviewLogEntrySchema: any;
+export declare const RRInputSchema: any;
+export declare const RROutputSchema: any;
+export declare const ViolationSummarySchema: any;
+export declare const BBInputSchema: any;
+export declare const BBOutputSchema: any;
+export declare const SemanticReviewResultSchema: any;
+export declare const JobTypeSchema: any;
+export declare const JobStatusSchema: any;
+export declare const CallbackActionSchema: any;
+export declare const CallbackSchema: any;
+export declare const StatementRefSchema: any;
+export declare const JobSchema: any;
+export declare const ReviewerResponseSchema: any;

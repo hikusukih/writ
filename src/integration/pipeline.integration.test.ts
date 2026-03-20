@@ -401,6 +401,71 @@ describe("5. Developer/Writer Trigger", () => {
 });
 
 // ---------------------------------------------------------------------------
+// Test 7 — Orchestrator → Scheduler → DefaultJobExecutor  (mock-only)
+//
+// Validates: handleRequest() routes LP + execute through a provided Scheduler.
+// External behavior is unchanged; jobs are created in the job store.
+// ---------------------------------------------------------------------------
+
+describe("7. Orchestrator → Scheduler → DefaultJobExecutor", () => {
+  it.skipIf(USE_REAL_LLM)(
+    "handleRequest routes execution through scheduler and returns same result as direct call",
+    async () => {
+      const plansDir = await makeTmpPlansDir();
+      const jobsDir = await mkdtemp(join(tmpdir(), "writ-integ-orch-jobs-"));
+
+      try {
+        const client = createMockLLMClient();
+        const adapter = createTestAdapter();
+
+        const store = await createJobStore(jobsDir);
+        const executor = createDefaultJobExecutor({
+          client,
+          identity,
+          scriptsDir: INSTANCE_SCRIPTS_DIR,
+          plansDir,
+          skipReview: false,
+        });
+        const scheduler = createScheduler(store, executor, adapter);
+
+        const result = await handleRequest(
+          client,
+          "List the files in the project root",
+          identity,
+          INSTANCE_SCRIPTS_DIR,
+          plansDir,
+          undefined,
+          false,
+          adapter,
+          scheduler
+        );
+
+        // Pipeline completes successfully
+        expect(result.response).toBeTruthy();
+        expect(adapter.collected.errors).toHaveLength(0);
+
+        // Provenance chain includes all expected agents
+        const agentIds = result.provenance.map((p) => p.agentId);
+        expect(agentIds).toContain("orchestrator");
+        expect(agentIds).toContain("planner");
+        expect(agentIds).toContain("lieutenant-planner");
+        expect(agentIds).toContain("executor");
+
+        // Jobs were created in the store (at least plan + execute per assignment)
+        const jobs = await store.getAll();
+        expect(jobs.length).toBeGreaterThanOrEqual(2);
+        const completedJobs = jobs.filter((j) => j.status === "completed");
+        expect(completedJobs.length).toBe(jobs.length);
+      } finally {
+        await rm(plansDir, { recursive: true, force: true });
+        await rm(jobsDir, { recursive: true, force: true });
+      }
+    },
+    30_000
+  );
+});
+
+// ---------------------------------------------------------------------------
 // Test 6 — DefaultJobExecutor + Scheduler Integration  (mock-only)
 //
 // Validates: Scheduler + DefaultJobExecutor wiring end-to-end with MockLLMClient.

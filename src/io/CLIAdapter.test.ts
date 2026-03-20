@@ -48,6 +48,18 @@ describe("CLIAdapter output methods", () => {
     expect(logSpy).toHaveBeenCalledWith("System ready.");
   });
 
+  it("sendAcknowledgment prints message to stdout", () => {
+    const adapter = createCLIAdapter();
+    adapter.sendAcknowledgment("Request received, processing…");
+    expect(logSpy).toHaveBeenCalledWith("Request received, processing…");
+  });
+
+  it("sendProgress prints [jobId] message to stdout", () => {
+    const adapter = createCLIAdapter();
+    adapter.sendProgress("job-42", "running step 1 of 3");
+    expect(logSpy).toHaveBeenCalledWith("[job-42] running step 1 of 3");
+  });
+
   it("onRequest stores handler (smoke test — handler called with input)", async () => {
     const adapter = createCLIAdapter();
     const handler = vi.fn().mockResolvedValue(undefined);

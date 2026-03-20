@@ -14,7 +14,7 @@ export async function listScripts(scriptsDir) {
     }
     return scripts;
 }
-function parseScriptFrontmatter(content, filename, path) {
+export function parseScriptFrontmatter(content, filename, path) {
     const lines = content.split("\n");
     let name = filename.replace(".sh", "");
     let description = "";

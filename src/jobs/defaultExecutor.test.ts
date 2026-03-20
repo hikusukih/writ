@@ -18,7 +18,7 @@ vi.mock("../agents/developer-writer.js", () => ({
 }));
 
 vi.mock("../agents/lieutenant-planner.js", () => ({
-  createDetailedPlan: vi.fn(),
+  createDetailedPlanWithDW: vi.fn(),
 }));
 
 vi.mock("../agents/planner.js", () => ({
@@ -31,7 +31,7 @@ vi.mock("../scripts/index.js", () => ({
 
 import { executeFromPlan } from "../agents/executor.js";
 import { generateScript } from "../agents/developer-writer.js";
-import { createDetailedPlan } from "../agents/lieutenant-planner.js";
+import { createDetailedPlanWithDW } from "../agents/lieutenant-planner.js";
 import { createStrategicPlan } from "../agents/planner.js";
 import { listScripts } from "../scripts/index.js";
 
@@ -70,6 +70,8 @@ const mockAdapter: IOAdapter = {
   sendError: vi.fn().mockResolvedValue(undefined),
   sendReviewBlock: vi.fn().mockResolvedValue(undefined),
   sendStatus: vi.fn().mockResolvedValue(undefined),
+  sendAcknowledgment: vi.fn().mockResolvedValue(undefined),
+  sendProgress: vi.fn().mockResolvedValue(undefined),
   onRequest: vi.fn(),
   start: vi.fn().mockResolvedValue(undefined),
   stop: vi.fn(),
@@ -131,22 +133,23 @@ describe("DefaultJobExecutor", () => {
   });
 
   // 3. plan
-  it("plan job calls createDetailedPlan with the job goal as a work assignment and returns the result", async () => {
+  it("plan job calls createDetailedPlanWithDW with the job goal as a work assignment and returns the result", async () => {
     const lpResult = { plan: mockPlan, missingScripts: [] };
-    vi.mocked(createDetailedPlan).mockResolvedValue(lpResult);
+    vi.mocked(createDetailedPlanWithDW).mockResolvedValue(lpResult);
 
     const executor = createDefaultJobExecutor(deps);
     const job = makeJob({ type: "plan", goal: "write a detailed plan for the task" });
 
     const result = await executor.execute(job, undefined);
 
-    expect(createDetailedPlan).toHaveBeenCalledOnce();
-    expect(createDetailedPlan).toHaveBeenCalledWith(
+    expect(createDetailedPlanWithDW).toHaveBeenCalledOnce();
+    expect(createDetailedPlanWithDW).toHaveBeenCalledWith(
       mockClient,
       { id: job.id, description: job.goal },
       mockIdentity,
       deps.scriptsDir,
-      deps.plansDir
+      deps.plansDir,
+      { adapter: undefined, skipReview: undefined }
     );
     expect(result).toBe(lpResult);
   });

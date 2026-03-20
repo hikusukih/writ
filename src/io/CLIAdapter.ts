@@ -35,6 +35,14 @@ export function createCLIAdapter(options: CLIAdapterOptions = {}): IOAdapter {
       console.log(message);
     },
 
+    sendAcknowledgment(message: string): void {
+      console.log(message);
+    },
+
+    sendProgress(jobId: string, message: string): void {
+      console.log(`[${jobId}] ${message}`);
+    },
+
     requestConfirmation(summary: string, details?: string): Promise<boolean> {
       return new Promise<boolean>((resolve) => {
         console.log(`\n[CONFIRMATION REQUIRED] ${summary}`);

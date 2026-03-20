@@ -5,7 +5,7 @@ import type { LLMClient } from "../agents/claude-client.js";
 import type { IdentityContext, WorkAssignment } from "../types.js";
 import { executeFromPlan } from "../agents/executor.js";
 import { generateScript } from "../agents/developer-writer.js";
-import { createDetailedPlan } from "../agents/lieutenant-planner.js";
+import { createDetailedPlanWithDW } from "../agents/lieutenant-planner.js";
 import { createStrategicPlan } from "../agents/planner.js";
 import { listScripts } from "../scripts/index.js";
 
@@ -14,6 +14,7 @@ export interface DefaultJobExecutorDeps {
   identity: IdentityContext;
   scriptsDir: string;
   plansDir: string;
+  skipReview?: boolean;
 }
 
 export interface DefaultJobExecutor extends JobExecutor {
@@ -23,7 +24,7 @@ export interface DefaultJobExecutor extends JobExecutor {
 export function createDefaultJobExecutor(
   deps: DefaultJobExecutorDeps
 ): DefaultJobExecutor {
-  const { client, identity, scriptsDir, plansDir } = deps;
+  const { client, identity, scriptsDir, plansDir, skipReview } = deps;
 
   return {
     async execute(job: Job, adapter: IOAdapter | undefined): Promise<unknown> {
@@ -49,7 +50,10 @@ export function createDefaultJobExecutor(
             id: job.id,
             description: job.goal,
           };
-          return createDetailedPlan(client, assignment, identity, scriptsDir, plansDir);
+          return createDetailedPlanWithDW(client, assignment, identity, scriptsDir, plansDir, {
+            adapter,
+            skipReview,
+          });
         }
 
         case "notify_user": {
