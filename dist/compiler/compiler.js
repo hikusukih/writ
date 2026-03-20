@@ -1,6 +1,10 @@
+import { readFile } from "node:fs/promises";
 import { listScripts } from "../scripts/index.js";
 import { runScript } from "../scripts/runner.js";
+import { InstructionFileSchema } from "../schemas.js";
 import { verbose } from "../logger.js";
+import { shouldSemanticReview, semanticReview, SemanticReviewError } from "../agents/semantic-review.js";
+export { SemanticReviewError };
 export class CompilerError extends Error {
     stepOrder;
     scriptId;
@@ -16,11 +20,13 @@ export class CompilerError extends Error {
 function paramName(decl) {
     return decl.split(/\s+/)[0];
 }
-export async function compile(instructions, scriptsDir) {
+export async function compile(instructions, scriptsDir, options = {}) {
+    InstructionFileSchema.parse(instructions);
     const scripts = await listScripts(scriptsDir);
     const scriptMap = new Map(scripts.map((s) => [s.id, s]));
     const results = [];
     const sortedSteps = [...instructions.steps].sort((a, b) => a.order - b.order);
+    // Phase 1: Validate all steps before execution
     for (const step of sortedSteps) {
         const script = scriptMap.get(step.scriptId);
         if (!script) {
@@ -32,10 +38,45 @@ export async function compile(instructions, scriptsDir) {
                 throw new CompilerError(`Param "${key}" is not declared in script "${step.scriptId}" frontmatter`, step.order, step.scriptId, "undeclared-param");
             }
         }
+    }
+    // Phase 2: Semantic review gate (between validation and execution)
+    if (options.semanticReview && shouldSemanticReview(options.semanticReview)) {
+        const composedScript = await buildComposedScript(sortedSteps, scriptMap, scriptsDir);
+        const planDesc = options.planDescription ?? instructions.planId;
+        const result = await semanticReview(options.semanticReview.client, composedScript, planDesc, options.semanticReview.identity);
+        if (!result.approved) {
+            throw new SemanticReviewError(result);
+        }
+    }
+    // Phase 3: Execute validated steps
+    for (const step of sortedSteps) {
+        const script = scriptMap.get(step.scriptId);
         verbose("Compiler: executing", { scriptId: step.scriptId, path: script.path, params: step.params });
         const result = await runScript(script.path, step.params);
         verbose("Compiler: result", { scriptId: result.scriptId, exitCode: result.exitCode, stdout: result.stdout, stderr: result.stderr });
         results.push(result);
     }
     return results;
+}
+/**
+ * Build a human-readable summary of what the composed script will do.
+ */
+async function buildComposedScript(steps, scriptMap, scriptsDir) {
+    const parts = [];
+    for (const step of steps) {
+        const script = scriptMap.get(step.scriptId);
+        if (!script)
+            continue;
+        try {
+            const content = await readFile(script.path, "utf-8");
+            const paramsStr = Object.entries(step.params)
+                .map(([k, v]) => `${k}="${v}"`)
+                .join(" ");
+            parts.push(`# Step: ${step.scriptId} (${paramsStr})\n${content}`);
+        }
+        catch {
+            parts.push(`# Step: ${step.scriptId} (script content unavailable)`);
+        }
+    }
+    return parts.join("\n\n");
 }

@@ -2,8 +2,10 @@ import { writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { listScripts } from "../scripts/index.js";
 import { compile } from "../compiler/compiler.js";
+import { PlanSchema } from "../schemas.js";
 import { verbose } from "../logger.js";
 export async function executeFromPlan(plan, scriptsDir, plansDir) {
+    PlanSchema.parse(plan);
     const availableScripts = await listScripts(scriptsDir);
     const availableIds = new Set(availableScripts.map((s) => s.id));
     verbose("Executor: available script IDs", [...availableIds]);

@@ -1,9 +1,10 @@
 import { writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { PlanSchema } from "../schemas.js";
+import { PlanSchema, StrategicPlanSchema } from "../schemas.js";
 import { buildSystemPrompt } from "./prompt-builder.js";
 import { getAgentConfig } from "../identity/loader.js";
 import { listScripts } from "../scripts/index.js";
+import { callWithValidation } from "./llm-utils.js";
 import { verbose } from "../logger.js";
 export async function createPlan(client, taskDescription, identity, scriptsDir, plansDir, scriptSubset) {
     const agentConfig = getAgentConfig(identity, "planner");
@@ -33,29 +34,65 @@ Rules:
 - If a step needs a file path, default to runtime/<plan-slug>.txt (relative, inside project)
 - Do not use absolute paths or placeholders like /path/to/file${paramHints ? `\nParam names by script:\n${paramHints}` : ""}`;
     verbose("Planner: sending plan request", userMessage);
-    const response = await client.sendMessage(systemPrompt, userMessage);
-    verbose("Planner: raw LLM response", response.content);
-    // Extract JSON from response (handle potential markdown fences)
-    const jsonStr = extractJson(response.content);
-    verbose("Planner: extracted JSON", jsonStr);
-    const parsed = JSON.parse(jsonStr);
-    const plan = PlanSchema.parse(parsed);
+    const plan = await callWithValidation(client, systemPrompt, userMessage, PlanSchema, {
+        label: "Planner",
+    });
     verbose("Planner: validated plan", plan);
     // Write natural language plan to disk for auditability
     const planMd = formatPlanMd(plan);
     await writeFile(join(plansDir, `PLAN-${plan.id}.md`), planMd);
     return plan;
 }
-function extractJson(text) {
-    // Try to extract from markdown code fence first
-    const fenceMatch = text.match(/```(?:json)?\s*\n?([\s\S]*?)\n?```/);
-    if (fenceMatch)
-        return fenceMatch[1].trim();
-    // Try to find raw JSON object
-    const braceMatch = text.match(/\{[\s\S]*\}/);
-    if (braceMatch)
-        return braceMatch[0];
-    return text.trim();
+/**
+ * Produce a high-level strategic plan that partitions work into assignments.
+ * The General Planner identifies what needs to happen; the Lieutenant Planner
+ * determines how (which scripts, in what order).
+ */
+export async function createStrategicPlan(client, taskDescription, identity, plansDir) {
+    const agentConfig = getAgentConfig(identity, "planner");
+    const systemPrompt = buildSystemPrompt(agentConfig, identity);
+    const userMessage = `Task: ${taskDescription}
+
+Respond with ONLY raw JSON, no fences, no prose:
+{"id":"strategic-<slug>","description":"<high-level goal>","assignments":[{"id":"assign-<n>","description":"<bounded piece of work>","context":"<optional context>","constraints":["optional constraint"]}]}
+
+Rules:
+- Partition the task into bounded, independent work assignments
+- Each assignment should be completable by a tactical planner without knowledge of the other assignments
+- Do NOT reference specific scripts — that's the tactical planner's job
+- Keep assignments at a high level: what needs to happen, not how
+- For simple tasks, a single assignment is fine
+- Each assignment id should be unique (e.g., assign-1, assign-2)`;
+    verbose("GeneralPlanner: sending strategic plan request", userMessage);
+    const plan = await callWithValidation(client, systemPrompt, userMessage, StrategicPlanSchema, {
+        label: "GeneralPlanner",
+    });
+    verbose("GeneralPlanner: validated strategic plan", plan);
+    const planMd = formatStrategicPlanMd(plan);
+    await writeFile(join(plansDir, `STRATEGIC-${plan.id}.md`), planMd);
+    return plan;
+}
+function formatStrategicPlanMd(plan) {
+    const lines = [
+        `# Strategic Plan: ${plan.id}`,
+        "",
+        `## Description`,
+        plan.description,
+        "",
+        `## Assignments`,
+    ];
+    for (const a of plan.assignments) {
+        lines.push(`### ${a.id}: ${a.description}`);
+        if (a.context)
+            lines.push(`- Context: ${a.context}`);
+        if (a.constraints?.length) {
+            lines.push(`- Constraints:`);
+            for (const c of a.constraints)
+                lines.push(`  - ${c}`);
+        }
+        lines.push("");
+    }
+    return lines.join("\n") + "\n";
 }
 function formatPlanMd(plan) {
     const lines = [
