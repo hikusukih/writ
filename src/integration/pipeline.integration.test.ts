@@ -24,6 +24,9 @@ import { loadIdentity } from "../identity/loader.js";
 import { createClaudeClient } from "../agents/claude-client.js";
 import { createTestAdapter } from "../io/TestAdapter.js";
 import { createMockLLMClient } from "../test-utils/MockLLMClient.js";
+import { createJobStore } from "../jobs/store.js";
+import { createScheduler } from "../jobs/scheduler.js";
+import { createDefaultJobExecutor } from "../jobs/defaultExecutor.js";
 import type { LLMClient } from "../agents/claude-client.js";
 import type { IdentityContext } from "../types.js";
 
@@ -392,6 +395,63 @@ describe("5. Developer/Writer Trigger", () => {
       // Pipeline completed without error
       expect(result.response).toBeTruthy();
       expect(adapter.collected.errors).toHaveLength(0);
+    },
+    30_000
+  );
+});
+
+// ---------------------------------------------------------------------------
+// Test 6 — DefaultJobExecutor + Scheduler Integration  (mock-only)
+//
+// Validates: Scheduler + DefaultJobExecutor wiring end-to-end with MockLLMClient.
+// Submits a "plan" job, runs the scheduler, verifies the job completes with a
+// plan structure.
+// ---------------------------------------------------------------------------
+
+describe("6. DefaultJobExecutor + Scheduler", () => {
+  it.skipIf(USE_REAL_LLM)(
+    "plan job completes through scheduler + DefaultJobExecutor and returns a plan structure",
+    async () => {
+      const jobsDir = await mkdtemp(join(tmpdir(), "writ-integ-jobs-"));
+      const plansDir = await mkdtemp(join(tmpdir(), "writ-integ-exec-plans-"));
+
+      try {
+        const client = createMockLLMClient();
+        const store = await createJobStore(jobsDir);
+        const executor = createDefaultJobExecutor({
+          client,
+          identity,
+          scriptsDir: INSTANCE_SCRIPTS_DIR,
+          plansDir,
+        });
+        const scheduler = createScheduler(store, executor, undefined);
+
+        const job = await scheduler.submitJob({
+          type: "plan",
+          goal: "Execute the task",
+          dependsOn: [],
+          createdBy: "test",
+          evidence: [],
+          callbacks: [],
+          channel: [],
+        });
+
+        scheduler.tick();
+        const completed = await scheduler.waitForJob(job.id, 15_000);
+
+        expect(completed.status).toBe("completed");
+        expect(completed.result).toBeDefined();
+
+        // Result should be a LieutenantPlanResult with a plan field
+        const result = completed.result as { plan?: { id?: string; steps?: unknown[] }; missingScripts?: unknown[] };
+        expect(result.plan).toBeDefined();
+        expect(result.plan?.id).toBeTruthy();
+        expect(Array.isArray(result.plan?.steps)).toBe(true);
+        expect(Array.isArray(result.missingScripts)).toBe(true);
+      } finally {
+        await rm(jobsDir, { recursive: true, force: true });
+        await rm(plansDir, { recursive: true, force: true });
+      }
     },
     30_000
   );
