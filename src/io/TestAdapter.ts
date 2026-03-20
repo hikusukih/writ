@@ -13,6 +13,8 @@ export interface TestAdapterCollections {
   reviewBlocks: Array<{ reasoning: string; matchedRules?: string[] }>;
   statusMessages: string[];
   confirmationRequests: Array<{ summary: string; details?: string }>;
+  acknowledgments: string[];
+  progressMessages: Array<{ jobId: string; message: string }>;
 }
 
 export interface TestAdapterOptions {
@@ -33,6 +35,8 @@ export function createTestAdapter(options: TestAdapterOptions = {}): TestAdapter
     reviewBlocks: [],
     statusMessages: [],
     confirmationRequests: [],
+    acknowledgments: [],
+    progressMessages: [],
   };
 
   return {
@@ -52,6 +56,14 @@ export function createTestAdapter(options: TestAdapterOptions = {}): TestAdapter
 
     sendStatus(message: string): void {
       collected.statusMessages.push(message);
+    },
+
+    sendAcknowledgment(message: string): void {
+      collected.acknowledgments.push(message);
+    },
+
+    sendProgress(jobId: string, message: string): void {
+      collected.progressMessages.push({ jobId, message });
     },
 
     onRequest(_handler: (input: string) => Promise<void>): void {

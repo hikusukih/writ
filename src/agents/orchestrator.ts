@@ -1,15 +1,21 @@
+import { mkdtemp, rm } from "node:fs/promises";
+import { join } from "node:path";
+import { tmpdir } from "node:os";
 import type { LLMClient, MessageParam } from "./claude-client.js";
 import { buildSystemPrompt } from "./prompt-builder.js";
 import { getAgentConfig } from "../identity/loader.js";
 import { createStrategicPlan } from "./planner.js";
-import { createDetailedPlanWithDW } from "./lieutenant-planner.js";
-import { executeFromPlan } from "./executor.js";
 import { applyReview } from "./reviewed.js";
 import { verbose } from "../logger.js";
 import type { IOAdapter } from "../io/IOAdapter.js";
+import type { Scheduler } from "../jobs/scheduler.js";
+import { createScheduler } from "../jobs/scheduler.js";
+import { createJobStore } from "../jobs/store.js";
+import { createDefaultJobExecutor } from "../jobs/defaultExecutor.js";
 import type {
   ExecutionResult,
   IdentityContext,
+  LieutenantPlanResult,
   OrchestratorResult,
   ProvenanceEntry,
   ScriptResult,
@@ -81,7 +87,8 @@ export async function handleRequest(
   plansDir: string,
   history?: MessageParam[],
   skipReview?: boolean,
-  adapter?: IOAdapter
+  adapter?: IOAdapter,
+  scheduler?: Scheduler
 ): Promise<OrchestratorResult> {
   const provenance: ProvenanceEntry[] = [];
 
@@ -132,45 +139,92 @@ export async function handleRequest(
     output: strategicPlan.description,
   });
 
-  // Step 3: For each assignment, LP creates detailed plan → Executor runs it
+  // Resolve the scheduler: use provided one or create an ephemeral in-process scheduler
+  let activeScheduler = scheduler;
+  let tmpJobsDir: string | undefined;
+  if (!activeScheduler) {
+    const dir = await mkdtemp(join(tmpdir(), "writ-orch-jobs-"));
+    tmpJobsDir = dir;
+    const store = await createJobStore(dir);
+    const executor = createDefaultJobExecutor({ client, identity, scriptsDir, plansDir, skipReview });
+    activeScheduler = createScheduler(store, executor, adapter);
+  }
+
+  // Step 3: For each assignment, route LP + execute through the scheduler
   const allExecutionResults: ExecutionResult[] = [];
   const allResults: ScriptResult[] = [];
 
-  for (const assignment of strategicPlan.assignments) {
-    verbose("Orchestrator: processing assignment", { id: assignment.id, description: assignment.description });
+  try {
+    for (const assignment of strategicPlan.assignments) {
+      verbose("Orchestrator: processing assignment via scheduler", { id: assignment.id, description: assignment.description });
 
-    // Lieutenant Planner: detailed plan with DW integration
-    const lpResult = await createDetailedPlanWithDW(
-      client,
-      assignment,
-      identity,
-      scriptsDir,
-      plansDir,
-      { adapter, skipReview }
-    );
+      // Submit a "plan" job for the Lieutenant Planner (includes DW integration)
+      const planJob = await activeScheduler.submitJob({
+        type: "plan",
+        goal: assignment.description,
+        dependsOn: [],
+        createdBy: "orchestrator",
+        evidence: [],
+        callbacks: [],
+        channel: [],
+      });
 
-    provenance.push({
-      agentId: "lieutenant-planner",
-      action: `created detailed plan ${lpResult.plan.id} for assignment ${assignment.id}`,
-      output: lpResult.plan.description,
-    });
+      await activeScheduler.tick();
+      const completedPlanJob = await activeScheduler.waitForJob(planJob.id);
 
-    // Executor runs the detailed plan
-    verbose("Orchestrator: executing plan", { planId: lpResult.plan.id, steps: lpResult.plan.steps.length });
-    const executionResult = await executeFromPlan(lpResult.plan, scriptsDir, plansDir);
+      if (completedPlanJob.status === "failed") {
+        const errMsg = (completedPlanJob.result as { error?: string } | undefined)?.error ?? "unknown error";
+        throw new Error(`Plan job for assignment ${assignment.id} failed: ${errMsg}`);
+      }
 
-    verbose("Orchestrator: execution results", executionResult.results);
-    const scriptsSummary = executionResult.results
-      .map((r) => `${r.scriptId}: exit=${r.exitCode}`)
-      .join(", ");
-    provenance.push({
-      agentId: "executor",
-      action: `executed plan ${lpResult.plan.id}`,
-      output: scriptsSummary,
-    });
+      const lpResult = completedPlanJob.result as LieutenantPlanResult;
 
-    allExecutionResults.push(executionResult);
-    allResults.push(...executionResult.results);
+      provenance.push({
+        agentId: "lieutenant-planner",
+        action: `created detailed plan ${lpResult.plan.id} for assignment ${assignment.id}`,
+        output: lpResult.plan.description,
+      });
+
+      // Submit an "execute_script" job with the plan from LP
+      verbose("Orchestrator: executing plan via scheduler", { planId: lpResult.plan.id, steps: lpResult.plan.steps.length });
+      const execJob = await activeScheduler.submitJob({
+        type: "execute_script",
+        goal: `Execute plan ${lpResult.plan.id}`,
+        plan: lpResult.plan,
+        dependsOn: [],
+        createdBy: "orchestrator",
+        evidence: [],
+        callbacks: [],
+        channel: [],
+      });
+
+      await activeScheduler.tick();
+      const completedExecJob = await activeScheduler.waitForJob(execJob.id);
+
+      if (completedExecJob.status === "failed") {
+        const errMsg = (completedExecJob.result as { error?: string } | undefined)?.error ?? "unknown error";
+        throw new Error(`Execute job for plan ${lpResult.plan.id} failed: ${errMsg}`);
+      }
+
+      const executionResult = completedExecJob.result as ExecutionResult;
+
+      verbose("Orchestrator: execution results", executionResult.results);
+      const scriptsSummary = executionResult.results
+        .map((r) => `${r.scriptId}: exit=${r.exitCode}`)
+        .join(", ");
+      provenance.push({
+        agentId: "executor",
+        action: `executed plan ${lpResult.plan.id}`,
+        output: scriptsSummary,
+      });
+
+      allExecutionResults.push(executionResult);
+      allResults.push(...executionResult.results);
+    }
+  } finally {
+    if (tmpJobsDir) {
+      await rm(tmpJobsDir, { recursive: true, force: true }).catch(() => {});
+    }
   }
 
   // Step 4: Generate natural-language response
