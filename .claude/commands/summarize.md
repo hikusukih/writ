@@ -14,7 +14,7 @@ List each branch. For branches starting with `claude/`, note the task descriptio
 
 ## 3. Current GitHub Issues by label
 
-The `gh` CLI does not work in this environment because the git remote points to a local proxy. Use the GitHub API directly with `GH_TOKEN`:
+The `gh` CLI does not work in this environment. Use the GitHub API directly with `GH_TOKEN` (see CLAUDE.md § GitHub API Access):
 
 ```bash
 curl -s -H "Authorization: token $GH_TOKEN" -H "Accept: application/vnd.github.v3+json" \
