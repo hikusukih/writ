@@ -74,6 +74,7 @@ Rules:
 
   const plan = await callWithValidation(client, systemPrompt, userMessage, PlanSchema, {
     label: "LieutenantPlanner",
+    agentId: "lieutenant-planner",
   });
 
   verbose("LieutenantPlanner: validated plan", plan);

@@ -67,6 +67,7 @@ export async function proposeConfigUpdate(
 
   const result = await callWithValidation(client, systemPrompt, userMessage, BBOutputSchema, {
     label: "BIG_BROTHER",
+    agentId: "big-brother",
   });
 
   verbose("BB: proposal ready", { changeRationale: result.changeRationale });

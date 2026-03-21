@@ -35,6 +35,8 @@ export interface MockLLMOptions {
 export interface MockLLMClient extends LLMClient {
   /** Ordered log of detected call types, for test assertions. */
   callLog: string[];
+  /** Log of agentId values passed to sendMessage/sendMessages, in call order. */
+  agentIdLog: (string | undefined)[];
 }
 
 function ok(content: string): ClaudeResponse {
@@ -105,11 +107,13 @@ const DEFAULT_REVIEWER_ALLOW = JSON.stringify({
 
 export function createMockLLMClient(options: MockLLMOptions = {}): MockLLMClient {
   const callLog: string[] = [];
+  const agentIdLog: (string | undefined)[] = [];
   let lpCallCount = 0;
 
   const reviewerResponse = options.reviewerDecision ?? DEFAULT_REVIEWER_ALLOW;
 
-  async function sendMessage(systemPrompt: string, userMessage: string): Promise<ClaudeResponse> {
+  async function sendMessage(systemPrompt: string, userMessage: string, agentId?: string): Promise<ClaudeResponse> {
+    agentIdLog.push(agentId);
     // LLM reviewer: system prompt begins with the reviewer preamble
     if (systemPrompt.includes("You are the security and ethics reviewer")) {
       callLog.push("reviewer");
@@ -166,7 +170,8 @@ export function createMockLLMClient(options: MockLLMOptions = {}): MockLLMClient
 
   async function sendMessages(
     systemPrompt: string,
-    messages: MessageParam[]
+    messages: MessageParam[],
+    agentId?: string
   ): Promise<ClaudeResponse> {
     const last = messages[messages.length - 1];
     let content = "";
@@ -178,8 +183,8 @@ export function createMockLLMClient(options: MockLLMOptions = {}): MockLLMClient
         .map((b) => ("text" in b ? b.text : ""))
         .join("");
     }
-    return sendMessage(systemPrompt, content);
+    return sendMessage(systemPrompt, content, agentId);
   }
 
-  return { callLog, sendMessage, sendMessages };
+  return { callLog, agentIdLog, sendMessage, sendMessages };
 }

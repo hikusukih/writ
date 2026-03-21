@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
-import { createOllamaClient } from "./ollama-client.js";
+import { createOllamaClient, resolveOllamaModel } from "./ollama-client.js";
 
 function makeFetch(status: number, body: unknown) {
   return vi.fn().mockResolvedValue({
@@ -12,6 +12,27 @@ function makeFetch(status: number, body: unknown) {
 
 afterEach(() => {
   vi.unstubAllGlobals();
+});
+
+describe("resolveOllamaModel", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it("returns per-agent env var when set", () => {
+    vi.stubEnv("OLLAMA_MODEL_ORCHESTRATOR", "llama3.1:8b");
+    vi.stubEnv("OLLAMA_MODEL", "llama3.2");
+    expect(resolveOllamaModel("orchestrator")).toBe("llama3.1:8b");
+  });
+
+  it("falls back to OLLAMA_MODEL when per-agent var is not set", () => {
+    vi.stubEnv("OLLAMA_MODEL", "mistral");
+    expect(resolveOllamaModel("orchestrator")).toBe("mistral");
+  });
+
+  it("falls back to hardcoded default when neither env var is set", () => {
+    expect(resolveOllamaModel("orchestrator")).toBe("llama3.2");
+  });
 });
 
 describe("createOllamaClient", () => {

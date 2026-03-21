@@ -122,8 +122,8 @@ export async function handleRequest(
     ? await client.sendMessages(systemPrompt, [
         ...history,
         { role: "user", content: currentMessage },
-      ])
-    : await client.sendMessage(systemPrompt, currentMessage);
+      ], "orchestrator")
+    : await client.sendMessage(systemPrompt, currentMessage, "orchestrator");
 
   const taskDescription = interpretResponse.content.trim();
   verbose("Orchestrator: task description", taskDescription);
@@ -318,7 +318,7 @@ export async function handleRequest(
     allResults
   );
   verbose("Orchestrator: sending response-generation request", { responsePrompt });
-  const responseContent = await client.sendMessage(systemPrompt, responsePrompt);
+  const responseContent = await client.sendMessage(systemPrompt, responsePrompt, "orchestrator");
   const response = responseContent.content.trim();
   verbose("Orchestrator: response generated", { response });
 

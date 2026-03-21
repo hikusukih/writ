@@ -66,6 +66,7 @@ Does this output violate any security constraints, ethical guidelines, or the sy
     verbose("LLM reviewer: sending review request", { subjectAgentId, contentLength: content.length });
     const result = await callWithValidation(client, systemPrompt, userMessage, ReviewerResponseSchema, {
       label: "LLM reviewer",
+      agentId: "reviewer",
     });
 
     verbose("LLM reviewer: decision", { decision: result.decision, reasoning: result.reasoning });

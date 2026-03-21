@@ -14,12 +14,14 @@ export interface ClaudeResponse {
 export interface LLMClient {
   sendMessage(
     systemPrompt: string,
-    userMessage: string
+    userMessage: string,
+    agentId?: string
   ): Promise<ClaudeResponse>;
 
   sendMessages(
     systemPrompt: string,
-    messages: MessageParam[]
+    messages: MessageParam[],
+    agentId?: string
   ): Promise<ClaudeResponse>;
 }
 
@@ -47,7 +49,8 @@ export function createClaudeClient(apiKey?: string): LLMClient {
   return {
     async sendMessage(
       systemPrompt: string,
-      userMessage: string
+      userMessage: string,
+      _agentId?: string
     ): Promise<ClaudeResponse> {
       const model = getClaudeModel();
       verbose("Claude API: sendMessage", { model, systemPromptLength: systemPrompt.length, userMessage });
@@ -64,7 +67,8 @@ export function createClaudeClient(apiKey?: string): LLMClient {
 
     async sendMessages(
       systemPrompt: string,
-      messages: MessageParam[]
+      messages: MessageParam[],
+      _agentId?: string
     ): Promise<ClaudeResponse> {
       const model = getClaudeModel();
       verbose("Claude API: sendMessages", { model, systemPromptLength: systemPrompt.length, messageCount: messages.length });

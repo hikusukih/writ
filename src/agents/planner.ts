@@ -56,6 +56,7 @@ Rules:
 
   const plan = await callWithValidation(client, systemPrompt, userMessage, PlanSchema, {
     label: "Planner",
+    agentId: "planner",
   });
 
   verbose("Planner: validated plan", plan);
@@ -98,6 +99,7 @@ Rules:
 
   const plan = await callWithValidation(client, systemPrompt, userMessage, StrategicPlanSchema, {
     label: "GeneralPlanner",
+    agentId: "planner",
   });
 
   verbose("GeneralPlanner: validated strategic plan", plan);

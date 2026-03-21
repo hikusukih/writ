@@ -18,6 +18,7 @@ export function extractJson(text: string): string {
 export interface CallWithValidationOptions {
   maxRetries?: number;
   label?: string;
+  agentId?: string;
 }
 
 /**
@@ -34,7 +35,7 @@ export async function callWithValidation<T>(
   schema: ZodSchema<T>,
   options: CallWithValidationOptions = {}
 ): Promise<T> {
-  const { maxRetries = 2, label = "LLM call" } = options;
+  const { maxRetries = 2, label = "LLM call", agentId } = options;
   const totalAttempts = maxRetries + 1;
 
   let lastError: Error | undefined;
@@ -43,7 +44,7 @@ export async function callWithValidation<T>(
   for (let attempt = 1; attempt <= totalAttempts; attempt++) {
     try {
       verbose(`${label}: attempt ${attempt}/${totalAttempts}`);
-      const response = await client.sendMessage(systemPrompt, currentMessage);
+      const response = await client.sendMessage(systemPrompt, currentMessage, agentId);
       const jsonStr = extractJson(response.content);
       const parsed = JSON.parse(jsonStr);
       return schema.parse(parsed);

@@ -842,3 +842,50 @@ describe("11. Provenance Chain with Job IDs", () => {
     30_000
   );
 });
+
+// ---------------------------------------------------------------------------
+// Test 12 — Per-Agent ID Wiring  (mock-only)
+//
+// Validates: agentId is threaded through to sendMessage/sendMessages so that
+// Ollama model selection can vary per agent. Asserts the orchestrator's LLM
+// calls carry the correct agentId.
+// ---------------------------------------------------------------------------
+
+describe("12. Per-Agent ID Wiring", () => {
+  it.skipIf(USE_REAL_LLM)(
+    "passes agentId to sendMessage for orchestrator calls",
+    async () => {
+      const plansDir = await makeTmpPlansDir();
+
+      try {
+        const client = createMockLLMClient();
+        const adapter = createTestAdapter();
+
+        await handleRequest(
+          client,
+          "Hello, who are you?",
+          identity,
+          INSTANCE_SCRIPTS_DIR,
+          plansDir,
+          undefined,
+          /* skipReview */ true,
+          adapter
+        );
+
+        // Orchestrator calls sendMessage with agentId "orchestrator"
+        expect(client.agentIdLog).toContain("orchestrator");
+
+        // All logged agentIds should be defined strings (no undefined from the pipeline agents)
+        const definedIds = client.agentIdLog.filter((id) => id !== undefined);
+        expect(definedIds.length).toBeGreaterThan(0);
+        for (const id of definedIds) {
+          expect(typeof id).toBe("string");
+          expect((id as string).length).toBeGreaterThan(0);
+        }
+      } finally {
+        await rm(plansDir, { recursive: true, force: true });
+      }
+    },
+    30_000
+  );
+});

@@ -63,6 +63,7 @@ export async function auditReviewDecision(
 
   const result = await callWithValidation(client, systemPrompt, userMessage, RROutputSchema, {
     label: "Reviewer-Reviewer",
+    agentId: "reviewer-reviewer",
   });
 
   verbose("RR: audit result", {

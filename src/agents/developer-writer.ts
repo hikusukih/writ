@@ -45,7 +45,7 @@ Respond with ONLY a JSON object, no fences, no prose:
     systemPrompt,
     userMessage,
     DeveloperWriterResultSchema,
-    { label: "DeveloperWriter" }
+    { label: "DeveloperWriter", agentId: "developer-writer" }
   );
 
   // Validate that the generated script has proper frontmatter

@@ -9,7 +9,7 @@ export async function invokeAgent(
   identity: IdentityContext
 ): Promise<AgentOutput> {
   const systemPrompt = buildSystemPrompt(agentConfig, identity);
-  const response = await client.sendMessage(systemPrompt, input);
+  const response = await client.sendMessage(systemPrompt, input, agentConfig.id);
 
   return {
     content: response.content,
