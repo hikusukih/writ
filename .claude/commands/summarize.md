@@ -14,9 +14,18 @@ List each branch. For branches starting with `claude/`, note the task descriptio
 
 ## 3. Current GitHub Issues by label
 
-Run: `gh issue list --label "on-deck"`, `gh issue list --label "needs-refinement"`, `gh issue list --label "blocked"`
+The `gh` CLI does not work in this environment because the git remote points to a local proxy. Use the GitHub API directly with `GH_TOKEN`:
 
-Group results under each label. If `gh` is not authenticated, note that issue tracking is unavailable and skip this section.
+```bash
+curl -s -H "Authorization: token $GH_TOKEN" -H "Accept: application/vnd.github.v3+json" \
+  "https://api.github.com/repos/hikusukih/writ/issues?state=open&labels=on-deck&per_page=50"
+curl -s -H "Authorization: token $GH_TOKEN" -H "Accept: application/vnd.github.v3+json" \
+  "https://api.github.com/repos/hikusukih/writ/issues?state=open&labels=needs-refinement&per_page=50"
+curl -s -H "Authorization: token $GH_TOKEN" -H "Accept: application/vnd.github.v3+json" \
+  "https://api.github.com/repos/hikusukih/writ/issues?state=open&labels=blocked&per_page=50"
+```
+
+Parse each response for `number`, `title`, and `html_url`. Group results under each label. If `GH_TOKEN` is unset, note that issue tracking is unavailable and skip this section.
 
 ## 4. Test suite status
 

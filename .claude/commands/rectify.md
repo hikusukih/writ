@@ -1,6 +1,6 @@
 Scan for inconsistencies between the documentation and the actual codebase. Work through each check below, then print a summary report of all findings.
 
-Do NOT create GitHub Issues during this run — just report findings. (Issue creation requires `gh` auth; check with `gh auth status` first and skip if not available.)
+Do NOT create GitHub Issues during this run — just report findings. (The `gh` CLI does not work in this environment; use the GitHub API directly with `GH_TOKEN` if issue creation is ever needed: `curl -X POST -H "Authorization: token $GH_TOKEN" -H "Accept: application/vnd.github.v3+json" https://api.github.com/repos/hikusukih/writ/issues -d '{"title":"...","body":"..."}'`)
 
 ---
 
