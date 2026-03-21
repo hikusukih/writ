@@ -96,7 +96,7 @@ describe("handleRequest", () => {
   async function makeScheduler(client: LLMClient): Promise<Scheduler> {
     const store = await createJobStore(await mkdtemp(join(tmpdir(), "writ-orch-jobs-")));
     const executor = createDefaultJobExecutor({
-      client,
+      clientFactory: (_agentId) => client,
       identity: mockIdentity,
       scriptsDir,
       plansDir,
@@ -391,7 +391,7 @@ describe("handleRequest", () => {
 
     const store = await createJobStore(await mkdtemp(join(tmpdir(), "writ-orch-sched-")));
     const executor = createDefaultJobExecutor({
-      client,
+      clientFactory: (_agentId) => client,
       identity: mockIdentity,
       scriptsDir,
       plansDir,

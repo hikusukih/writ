@@ -65,7 +65,7 @@ async function main(): Promise<void> {
   await mkdir(PLANS_DIR, { recursive: true });
   await mkdir(JOBS_DIR, { recursive: true });
 
-  const client = createLLMClient();
+  const orchestratorClient = createLLMClient("orchestrator");
   const model = getActiveModel();
   adapter.sendStatus(`Loaded ${identity.agents.length} agents from registry.`);
   adapter.sendStatus(
@@ -73,7 +73,7 @@ async function main(): Promise<void> {
   );
   const jobStore = await createJobStore(JOBS_DIR);
   const jobExecutor = createDefaultJobExecutor({
-    client,
+    clientFactory: (agentId) => createLLMClient(agentId),
     identity,
     scriptsDir: SCRIPTS_DIR,
     plansDir: PLANS_DIR,
@@ -137,7 +137,7 @@ async function main(): Promise<void> {
 
     try {
       const result = await handleRequest(
-        client,
+        orchestratorClient,
         input,
         identity,
         SCRIPTS_DIR,
@@ -189,7 +189,7 @@ async function main(): Promise<void> {
 
       // Fire-and-forget: sample a recent review decision for RR audit (don't block REPL)
       if (!skipReview) {
-        sampleAndAudit(client, identity, adapter, LOGS_DIR, 1.0, {
+        sampleAndAudit(orchestratorClient, identity, adapter, LOGS_DIR, 1.0, {
           identityDir: IDENTITY_DIR,
           runtimeDir: "runtime",
         }).catch((err) =>

@@ -161,7 +161,7 @@ export async function handleRequest(
     tmpJobsDir = dir;
     const store = await createJobStore(dir);
     const executor = createDefaultJobExecutor({
-      client,
+      clientFactory: (_agentId) => client,
       identity,
       scriptsDir,
       plansDir,

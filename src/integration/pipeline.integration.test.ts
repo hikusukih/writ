@@ -423,7 +423,7 @@ describe("7. Orchestrator → Scheduler → DefaultJobExecutor", () => {
 
         const store = await createJobStore(jobsDir);
         const executor = createDefaultJobExecutor({
-          client,
+          clientFactory: (_agentId) => client,
           identity,
           scriptsDir: INSTANCE_SCRIPTS_DIR,
           plansDir,
@@ -488,7 +488,7 @@ describe("6. DefaultJobExecutor + Scheduler", () => {
         const client = createMockLLMClient();
         const store = await createJobStore(jobsDir);
         const executor = createDefaultJobExecutor({
-          client,
+          clientFactory: (_agentId) => client,
           identity,
           scriptsDir: INSTANCE_SCRIPTS_DIR,
           plansDir,
@@ -546,7 +546,7 @@ describe("8. Throbber Timeout", () => {
 
         const store = await createJobStore(jobsDir);
         const realExecutor = createDefaultJobExecutor({
-          client,
+          clientFactory: (_agentId) => client,
           identity,
           scriptsDir: INSTANCE_SCRIPTS_DIR,
           plansDir,
@@ -608,7 +608,7 @@ describe("8. Throbber Timeout", () => {
 
         const store = await createJobStore(jobsDir);
         const executor = createDefaultJobExecutor({
-          client,
+          clientFactory: (_agentId) => client,
           identity,
           scriptsDir: INSTANCE_SCRIPTS_DIR,
           plansDir,
@@ -665,7 +665,7 @@ describe("9. Multi-Job DAG Execution", () => {
 
         const store = await createJobStore(jobsDir);
         const executor = createDefaultJobExecutor({
-          client,
+          clientFactory: (_agentId) => client,
           identity,
           scriptsDir: INSTANCE_SCRIPTS_DIR,
           plansDir,
@@ -722,6 +722,115 @@ describe("9. Multi-Job DAG Execution", () => {
 });
 
 // ---------------------------------------------------------------------------
+// Test 12 — Per-agent clientFactory wiring  (mock-only)
+//
+// Validates: DefaultJobExecutor calls clientFactory with the correct agent ID
+// for each job type, so per-agent model resolution wires through correctly.
+// ---------------------------------------------------------------------------
+
+describe("12. Per-agent clientFactory wiring", () => {
+  it.skipIf(USE_REAL_LLM)(
+    "clientFactory receives the correct agent ID for plan and develop_script jobs",
+    async () => {
+      const plansDir = await makeTmpPlansDir();
+      const jobsDir = await mkdtemp(join(tmpdir(), "writ-integ-factory-jobs-"));
+
+      try {
+        const client = createMockLLMClient();
+
+        // Track which agent IDs are requested through the factory
+        const requestedAgentIds: string[] = [];
+        const trackedFactory = (agentId: string): LLMClient => {
+          requestedAgentIds.push(agentId);
+          return client;
+        };
+
+        const store = await createJobStore(jobsDir);
+        const executor = createDefaultJobExecutor({
+          clientFactory: trackedFactory,
+          identity,
+          scriptsDir: INSTANCE_SCRIPTS_DIR,
+          plansDir,
+          skipReview: true,
+          getStore: () => store,
+        });
+        const scheduler = createScheduler(store, executor, undefined);
+
+        // Submit a plan job — should call factory with "lieutenant-planner"
+        const job = await scheduler.submitJob({
+          type: "plan",
+          goal: "Execute the task",
+          dependsOn: [],
+          createdBy: "test",
+          evidence: [],
+          callbacks: [],
+          channel: [],
+        });
+
+        scheduler.tick();
+        await scheduler.waitForJob(job.id, 15_000);
+
+        // The plan job should have called the factory with "lieutenant-planner"
+        expect(requestedAgentIds).toContain("lieutenant-planner");
+      } finally {
+        await rm(plansDir, { recursive: true, force: true });
+        await rm(jobsDir, { recursive: true, force: true });
+      }
+    },
+    30_000
+  );
+
+  it.skipIf(USE_REAL_LLM)(
+    "clientFactory receives 'developer-writer' for develop_script jobs",
+    async () => {
+      const plansDir = await makeTmpPlansDir();
+      const jobsDir = await mkdtemp(join(tmpdir(), "writ-integ-factory-dw-jobs-"));
+
+      try {
+        const client = createMockLLMClient();
+
+        const requestedAgentIds: string[] = [];
+        const trackedFactory = (agentId: string): LLMClient => {
+          requestedAgentIds.push(agentId);
+          return client;
+        };
+
+        const store = await createJobStore(jobsDir);
+        const executor = createDefaultJobExecutor({
+          clientFactory: trackedFactory,
+          identity,
+          scriptsDir: INSTANCE_SCRIPTS_DIR,
+          plansDir,
+          skipReview: true,
+          getStore: () => store,
+        });
+        const scheduler = createScheduler(store, executor, undefined);
+
+        // Submit a develop_script job — should call factory with "developer-writer"
+        const job = await scheduler.submitJob({
+          type: "develop_script",
+          goal: "a script that lists files",
+          dependsOn: [],
+          createdBy: "test",
+          evidence: [],
+          callbacks: [],
+          channel: [],
+        });
+
+        scheduler.tick();
+        await scheduler.waitForJob(job.id, 15_000);
+
+        expect(requestedAgentIds).toContain("developer-writer");
+      } finally {
+        await rm(plansDir, { recursive: true, force: true });
+        await rm(jobsDir, { recursive: true, force: true });
+      }
+    },
+    30_000
+  );
+});
+
+// ---------------------------------------------------------------------------
 // Test 10 — Channel Routing  (mock-only, Task 5.5)
 //
 // Validates: jobs created by the orchestrator carry a non-empty channel array
@@ -744,7 +853,7 @@ describe("10. Channel Routing", () => {
 
         const store = await createJobStore(jobsDir);
         const executor = createDefaultJobExecutor({
-          client,
+          clientFactory: (_agentId) => client,
           identity,
           scriptsDir: INSTANCE_SCRIPTS_DIR,
           plansDir,
@@ -800,7 +909,7 @@ describe("11. Provenance Chain with Job IDs", () => {
 
         const store = await createJobStore(jobsDir);
         const executor = createDefaultJobExecutor({
-          client,
+          clientFactory: (_agentId) => client,
           identity,
           scriptsDir: INSTANCE_SCRIPTS_DIR,
           plansDir,

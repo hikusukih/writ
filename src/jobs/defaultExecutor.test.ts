@@ -43,7 +43,7 @@ const mockClient = {} as LLMClient;
 const mockIdentity = {} as IdentityContext;
 
 const deps = {
-  client: mockClient,
+  clientFactory: (_agentId: string) => mockClient,
   identity: mockIdentity,
   scriptsDir: "/tmp/scripts",
   plansDir: "/tmp/plans",

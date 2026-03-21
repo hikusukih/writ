@@ -89,8 +89,8 @@ export function getActiveModel(): string {
   return getClaudeModel();
 }
 
-export function createLLMClient(): LLMClient {
+export function createLLMClient(agentId?: string): LLMClient {
   const provider = process.env.LLM_PROVIDER ?? "anthropic";
-  if (provider === "ollama") return createOllamaClient();
+  if (provider === "ollama") return createOllamaClient(undefined, undefined, agentId);
   return createClaudeClient();
 }
