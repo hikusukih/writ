@@ -32,6 +32,25 @@ Requires `ANTHROPIC_API_KEY` in `.env` (copy `.env.example`).
 
 **Provider switching**: Set `LLM_PROVIDER=ollama` in `.env` to use a locally-hosted model instead of the Anthropic API. Useful for dev/smoke testing to reduce API costs. Set `OLLAMA_BASE_URL` and `OLLAMA_MODEL` as needed (defaults: `http://localhost:11434` and configurable model).
 
+## GitHub API Access
+
+The `gh` CLI does not work in this environment — the git remote points to a local proxy that `gh` does not recognize as a GitHub host. Use the GitHub API directly with `GH_TOKEN`:
+
+```bash
+# List issues by label
+curl -s -H "Authorization: token $GH_TOKEN" \
+  -H "Accept: application/vnd.github.v3+json" \
+  "https://api.github.com/repos/hikusukih/writ/issues?state=open&labels=on-deck&per_page=50"
+
+# Create an issue
+curl -s -X POST -H "Authorization: token $GH_TOKEN" \
+  -H "Accept: application/vnd.github.v3+json" \
+  "https://api.github.com/repos/hikusukih/writ/issues" \
+  -d '{"title":"...","body":"...","labels":["..."]}'
+```
+
+If `GH_TOKEN` is unset, GitHub operations are unavailable — note it and skip rather than failing.
+
 ## Architecture
 
 ### Current Wiring
