@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
-import { createOllamaClient } from "./ollama-client.js";
+import { createOllamaClient, resolveOllamaModel } from "./ollama-client.js";
 
 function makeFetch(status: number, body: unknown) {
   return vi.fn().mockResolvedValue({
@@ -12,6 +12,7 @@ function makeFetch(status: number, body: unknown) {
 
 afterEach(() => {
   vi.unstubAllGlobals();
+  vi.unstubAllEnvs();
 });
 
 describe("createOllamaClient", () => {
@@ -108,5 +109,64 @@ describe("createOllamaClient", () => {
     expect(url).toBe("http://custom-host:11434/api/chat");
     const body = JSON.parse(options.body as string);
     expect(body.model).toBe("mistral");
+  });
+
+  it("uses per-agent env var when agentId is provided", async () => {
+    const ollamaResponse = { message: { content: "agent model" } };
+    const mockFetch = makeFetch(200, ollamaResponse);
+    vi.stubGlobal("fetch", mockFetch);
+    vi.stubEnv("OLLAMA_MODEL", "mistral");
+    vi.stubEnv("OLLAMA_MODEL_PLANNER", "qwen2.5-coder:7b-instruct");
+
+    const client = createOllamaClient(undefined, undefined, "planner");
+    await client.sendMessage("sys", "user");
+
+    const [, options] = mockFetch.mock.calls[0] as [string, RequestInit];
+    const body = JSON.parse(options.body as string);
+    expect(body.model).toBe("qwen2.5-coder:7b-instruct");
+  });
+});
+
+describe("resolveOllamaModel", () => {
+  it("falls back to hardcoded default when no env vars are set", () => {
+    expect(resolveOllamaModel()).toBe("llama3.1:8b");
+    expect(resolveOllamaModel(undefined)).toBe("llama3.1:8b");
+    expect(resolveOllamaModel("orchestrator")).toBe("llama3.1:8b");
+  });
+
+  it("uses OLLAMA_MODEL when no per-agent var is set", () => {
+    vi.stubEnv("OLLAMA_MODEL", "mistral:7b");
+    expect(resolveOllamaModel()).toBe("mistral:7b");
+    expect(resolveOllamaModel("orchestrator")).toBe("mistral:7b");
+    expect(resolveOllamaModel("planner")).toBe("mistral:7b");
+  });
+
+  it("uses per-agent env var overriding OLLAMA_MODEL", () => {
+    vi.stubEnv("OLLAMA_MODEL", "mistral:7b");
+    vi.stubEnv("OLLAMA_MODEL_ORCHESTRATOR", "llama3.1:8b");
+    vi.stubEnv("OLLAMA_MODEL_PLANNER", "qwen2.5-coder:7b-instruct");
+
+    expect(resolveOllamaModel("orchestrator")).toBe("llama3.1:8b");
+    expect(resolveOllamaModel("planner")).toBe("qwen2.5-coder:7b-instruct");
+    // Agent without override falls back to global
+    expect(resolveOllamaModel("executor")).toBe("mistral:7b");
+  });
+
+  it("uses per-agent env var without global OLLAMA_MODEL", () => {
+    vi.stubEnv("OLLAMA_MODEL_DEVELOPER_WRITER", "qwen2.5-coder:7b-instruct");
+
+    expect(resolveOllamaModel("developer-writer")).toBe("qwen2.5-coder:7b-instruct");
+    // Other agents fall back to hardcoded default
+    expect(resolveOllamaModel("orchestrator")).toBe("llama3.1:8b");
+  });
+
+  it("falls back for unknown agent IDs", () => {
+    vi.stubEnv("OLLAMA_MODEL", "mistral:7b");
+    expect(resolveOllamaModel("unknown-agent")).toBe("mistral:7b");
+  });
+
+  it("lieutenant-planner uses its own env var", () => {
+    vi.stubEnv("OLLAMA_MODEL_LIEUTENANT_PLANNER", "qwen2.5-coder:7b-instruct");
+    expect(resolveOllamaModel("lieutenant-planner")).toBe("qwen2.5-coder:7b-instruct");
   });
 });

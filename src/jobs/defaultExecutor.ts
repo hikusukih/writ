@@ -11,7 +11,7 @@ import { createStrategicPlan } from "../agents/planner.js";
 import { listScripts } from "../scripts/index.js";
 
 export interface DefaultJobExecutorDeps {
-  client: LLMClient;
+  clientFactory: (agentId: string) => LLMClient;
   identity: IdentityContext;
   scriptsDir: string;
   plansDir: string;
@@ -27,7 +27,7 @@ export interface DefaultJobExecutor extends JobExecutor {
 export function createDefaultJobExecutor(
   deps: DefaultJobExecutorDeps
 ): DefaultJobExecutor {
-  const { client, identity, scriptsDir, plansDir, skipReview, getStore } = deps;
+  const { clientFactory, identity, scriptsDir, plansDir, skipReview, getStore } = deps;
 
   return {
     async execute(job: Job, adapter: IOAdapter | undefined): Promise<unknown> {
@@ -55,7 +55,7 @@ export function createDefaultJobExecutor(
         case "develop_script": {
           const existingScripts = await listScripts(scriptsDir);
           return generateScript(
-            client,
+            clientFactory("developer-writer"),
             { capability: job.goal, existingScripts },
             identity
           );
@@ -66,7 +66,7 @@ export function createDefaultJobExecutor(
             id: job.id,
             description: job.goal,
           };
-          return createDetailedPlanWithDW(client, assignment, identity, scriptsDir, plansDir, {
+          return createDetailedPlanWithDW(clientFactory("lieutenant-planner"), assignment, identity, scriptsDir, plansDir, {
             adapter,
             skipReview,
           });
@@ -78,7 +78,7 @@ export function createDefaultJobExecutor(
         }
 
         case "replan": {
-          return createStrategicPlan(client, job.goal, identity, plansDir);
+          return createStrategicPlan(clientFactory("planner"), job.goal, identity, plansDir);
         }
 
         case "initiative_setup": {
