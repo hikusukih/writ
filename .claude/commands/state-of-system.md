@@ -1,6 +1,6 @@
-Generate `docs/STATE_OF_SYSTEM.md` by inspecting the actual codebase. Do NOT copy from other docs — derive everything by reading source files directly. Regenerate from scratch each time (overwrite the file completely).
+Inspect the actual codebase and generate a State of System report as conversational output. Do NOT copy from other docs — derive everything by reading source files directly. Do NOT write to any file.
 
-Work through each section below, then write the full file.
+Work through each section below, then print the full report in the conversation.
 
 ---
 
@@ -65,7 +65,7 @@ List items where: the roadmap says `[ ]` (not done) AND there is no correspondin
 
 ## Output
 
-Write the complete file to `docs/STATE_OF_SYSTEM.md` with this structure:
+Print the complete report to the conversation with this structure:
 
 ```markdown
 # State of System
@@ -90,5 +90,3 @@ _Generated: <today's date>. Reflects actual codebase — not aspirational docs._
 ## Known Gaps
 ...
 ```
-
-Confirm after writing: "STATE_OF_SYSTEM.md written."

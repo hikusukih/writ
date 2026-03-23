@@ -166,7 +166,7 @@ Every new feature that touches the pipeline requires an integration test in `src
 Custom slash commands in `.claude/commands/`:
 - `/rectify` — Scan for inconsistencies between the documentation and the actual codebase, then print a summary report
 - `/summarize` — Produce a development summary covering the current state of the repository (recent PRs, open issues, build status, etc.)
-- `/state-of-system` — Generate `docs/STATE_OF_SYSTEM.md` by inspecting the actual codebase directly
+- `/state-of-system` — Inspect the actual codebase and print a State of System report to the conversation
 
 ## Documentation Conventions
 
