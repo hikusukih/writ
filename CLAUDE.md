@@ -136,6 +136,14 @@ The Scheduler is the execution backbone. The Orchestrator calls the General Plan
 ### Project Tooling
 - `scripts/` — Dev/CI scripts (export-for-claude.sh). Not used by the running instance.
 
+## Destructive Action Safeguards
+
+Before any command that deletes, overwrites, or bulk-replaces files outside `runtime/`, confirm the target list and get explicit user approval. This includes but is not limited to: `rm -rf`, `git push --force`, bulk file moves/renames, and any operation that would overwrite source files or identity files.
+
+When a task involves removing or replacing existing content, list what will be affected before acting. Err on the side of asking.
+
+Never delete or overwrite files under `src/instance/identity/` without FAFC-style confirmation — these are the system's core identity and values.
+
 ## Code Patterns
 
 - **Functional style**: Export functions, not classes. `LLMClient` is an interface for mockability.
