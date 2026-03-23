@@ -17,6 +17,7 @@ Each item has a file in this directory. This index lists them in rough priority 
 9. **BIG_BROTHER Proactive Config Optimization** (`backlog-bb-optimization.md`) — Proactive mode for BB: analyzes execution logs and proposes config improvements on a per-invocation threshold, not just in response to RR flags.
 10. **Developer/Writer Branch-Based Script Staging** (`backlog-dw-branch-staging.md`) — Replace flat staging dir with git branch per DW session. Depends on Gitea integration.
 11. **Scenario CI via Claude Code Web** (`backlog-scenario-ci.md`) — Automated behavioral testing using ephemeral Claude Code web sessions as integration test environments. Validates end-to-end pipeline and self-authoring capability.
+12. **Multi-Source Input** (`backlog-multi-source-input.md`) — Support an array of input sources (multiple Gists, other channels) with per-source labels and revocation. Enables multi-user access and compromised-source revocation. Depends on Gist command channel (ADR-0001).
 
 ## Exploration Sketches
 
