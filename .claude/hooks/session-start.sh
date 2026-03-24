@@ -1,7 +1,17 @@
 #!/bin/bash
-# Session startup hook for Writ planning/implementation environments.
+# Session startup hook for Writ.
 # Runs on session start/resume in Claude Code on the web.
-# Fetches GitHub issues and project board data into runtime/planning/ for Claude to read.
+#
+# Planning data strategy:
+#   - If GH_TOKEN is set: fetch live from GitHub API, then push a snapshot to the
+#     `planning` branch (git plumbing, no checkout) as a cache for future sessions.
+#   - If GH_TOKEN is unset: read the last snapshot from origin/planning as a fallback.
+#
+# Order of operations:
+#   1. Fetch origin/main (for rebase reference)
+#   2. Fetch origin/planning (cache branch)
+#   3. Load planning data (API or cache)
+#   4. Print context summary
 
 set -euo pipefail
 
@@ -9,24 +19,47 @@ REPO="hikusukih/writ"
 PLANNING_DIR="${CLAUDE_PROJECT_DIR:-$(pwd)}/runtime/planning"
 mkdir -p "$PLANNING_DIR"
 
-# ── 1. Sync from main ────────────────────────────────────────────────────────
 echo "=== Session Start ===" >&2
 echo "Branch: $(git branch --show-current 2>/dev/null || echo unknown)" >&2
 
+# ── 1. Fetch origin/main ──────────────────────────────────────────────────────
 if git remote get-url origin &>/dev/null; then
-  echo "Fetching latest from origin/main..." >&2
   git fetch origin main --quiet 2>/dev/null || echo "Warning: could not fetch origin/main" >&2
 fi
 
-# ── 2. GitHub issues ─────────────────────────────────────────────────────────
-if [ -z "${GH_TOKEN:-}" ]; then
-  echo "GH_TOKEN not set — skipping GitHub data fetch." >&2
-  echo "Set GH_TOKEN in your cloud environment configuration to enable issue loading." >&2
+# ── 2. Fetch planning branch (cache) ─────────────────────────────────────────
+PLANNING_BRANCH_EXISTS=false
+if git fetch origin planning --quiet 2>/dev/null; then
+  PLANNING_BRANCH_EXISTS=true
+fi
 
-  # Write a placeholder so Claude knows why the file is absent
-  echo '{"error": "GH_TOKEN not set", "issues": [], "fetched_at": null}' > "$PLANNING_DIR/issues.json"
-  echo '{"error": "GH_TOKEN not set", "items": [], "fetched_at": null}' > "$PLANNING_DIR/board.json"
+# ── 3. Load planning data ─────────────────────────────────────────────────────
+if [ -z "${GH_TOKEN:-}" ]; then
+  # No token — try reading from planning branch cache
+  echo "GH_TOKEN not set — trying planning branch cache..." >&2
+
+  if $PLANNING_BRANCH_EXISTS && \
+     git show origin/planning:issues.json > "$PLANNING_DIR/issues.json" 2>/dev/null && \
+     git show origin/planning:board.json  > "$PLANNING_DIR/board.json"  2>/dev/null; then
+    CACHED_AT=$(python3 -c "
+import json
+try:
+    d = json.load(open('$PLANNING_DIR/issues.json'))
+    print(d.get('fetched_at', 'unknown date'))
+except Exception:
+    print('unknown date')
+" 2>/dev/null || echo "unknown date")
+    echo "Loaded planning cache from planning branch (snapshot: $CACHED_AT)" >&2
+    echo "Set GH_TOKEN to fetch fresh data and update the cache." >&2
+  else
+    echo "No planning branch cache found. Set GH_TOKEN to fetch from GitHub." >&2
+    echo '{"error": "GH_TOKEN not set, no cache available", "issues": [], "fetched_at": null}' \
+      > "$PLANNING_DIR/issues.json"
+    echo '{"error": "GH_TOKEN not set, no cache available", "items": [], "fetched_at": null}' \
+      > "$PLANNING_DIR/board.json"
+  fi
 else
+  # Token available — fetch live from GitHub API
   TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
   AUTH_HEADER="Authorization: token $GH_TOKEN"
   ACCEPT_HEADER="Accept: application/vnd.github.v3+json"
@@ -34,7 +67,6 @@ else
 
   echo "Fetching GitHub issues..." >&2
 
-  # All open issues (up to 100), with labels and metadata
   ISSUES=$(curl -sf \
     -H "$AUTH_HEADER" \
     -H "$ACCEPT_HEADER" \
@@ -43,11 +75,9 @@ else
     ISSUES="[]"
   }
 
-  # Annotate with fetch timestamp
   echo "$ISSUES" | python3 -c "
 import sys, json
 data = json.load(sys.stdin)
-# Trim to fields Claude needs; keep it small
 trimmed = [{
   'number': i['number'],
   'title': i['title'],
@@ -66,13 +96,16 @@ print(json.dumps({'fetched_at': '${TIMESTAMP}', 'count': len(trimmed), 'issues':
     echo '{"error": "json processing failed", "issues": []}' > "$PLANNING_DIR/issues.json"
   }
 
-  ISSUE_COUNT=$(python3 -c "import json; d=json.load(open('$PLANNING_DIR/issues.json')); print(d.get('count', 0))" 2>/dev/null || echo "?")
+  ISSUE_COUNT=$(python3 -c "
+import json
+d = json.load(open('$PLANNING_DIR/issues.json'))
+print(d.get('count', 0))
+" 2>/dev/null || echo "?")
   echo "Fetched $ISSUE_COUNT open issues → runtime/planning/issues.json" >&2
 
-  # ── 3. GitHub Projects (classic project boards) ───────────────────────────
+  # Project boards
   echo "Fetching project boards..." >&2
 
-  # Try repo-level projects first
   PROJECTS=$(curl -sf \
     -H "$AUTH_HEADER" \
     -H "$ACCEPT_HEADER" \
@@ -82,7 +115,6 @@ print(json.dumps({'fetched_at': '${TIMESTAMP}', 'count': len(trimmed), 'issues':
   PROJECT_COUNT=$(echo "$PROJECTS" | python3 -c "import json,sys; print(len(json.load(sys.stdin)))" 2>/dev/null || echo 0)
 
   if [ "$PROJECT_COUNT" -gt 0 ]; then
-    # Fetch columns + cards for each project
     echo "$PROJECTS" | python3 -c "
 import sys, json, urllib.request, os
 
@@ -104,10 +136,7 @@ for p in projects:
             col = {'name': c['name'], 'cards': []}
             cards = gh_get(c['cards_url'] + '?per_page=50')
             for card in cards:
-                col['cards'].append({
-                    'note': card.get('note'),
-                    'content_url': card.get('content_url'),
-                })
+                col['cards'].append({'note': card.get('note'), 'content_url': card.get('content_url')})
             proj['columns'].append(col)
     except Exception as e:
         proj['error'] = str(e)
@@ -119,12 +148,40 @@ print(json.dumps({'fetched_at': '${TIMESTAMP}', 'projects': result}, indent=2))
     }
     echo "Fetched $PROJECT_COUNT project board(s) → runtime/planning/board.json" >&2
   else
-    echo "{\"fetched_at\": \"$TIMESTAMP\", \"note\": \"No classic project boards found. Check GitHub Projects (v2) in the web UI.\", \"projects\": []}" > "$PLANNING_DIR/board.json"
-    echo "No classic project boards found (GitHub Projects v2 requires GraphQL — see /load-board-v2)" >&2
+    echo "{\"fetched_at\": \"$TIMESTAMP\", \"note\": \"No classic project boards found.\", \"projects\": []}" \
+      > "$PLANNING_DIR/board.json"
+    echo "No classic project boards found (GitHub Projects v2 requires GraphQL)" >&2
+  fi
+
+  # ── Push snapshot to planning branch (git plumbing, no checkout) ─────────────
+  echo "Updating planning branch cache..." >&2
+  BLOB_ISSUES=$(git hash-object -w "$PLANNING_DIR/issues.json" 2>/dev/null) || BLOB_ISSUES=""
+  BLOB_BOARD=$(git hash-object -w "$PLANNING_DIR/board.json" 2>/dev/null)  || BLOB_BOARD=""
+
+  if [ -n "$BLOB_ISSUES" ] && [ -n "$BLOB_BOARD" ]; then
+    TREE=$(printf "100644 blob %s\tissues.json\n100644 blob %s\tboard.json\n" \
+      "$BLOB_ISSUES" "$BLOB_BOARD" | git mktree 2>/dev/null) || TREE=""
+
+    if [ -n "$TREE" ]; then
+      PARENT=$(git rev-parse origin/planning 2>/dev/null || echo "")
+      if [ -n "$PARENT" ]; then
+        COMMIT=$(git commit-tree "$TREE" -p "$PARENT" \
+          -m "planning: snapshot $TIMESTAMP" 2>/dev/null) || COMMIT=""
+      else
+        COMMIT=$(git commit-tree "$TREE" \
+          -m "planning: initial snapshot $TIMESTAMP" 2>/dev/null) || COMMIT=""
+      fi
+
+      if [ -n "$COMMIT" ]; then
+        git push origin "$COMMIT:refs/heads/planning" --quiet 2>/dev/null \
+          && echo "Planning branch cache updated." >&2 \
+          || echo "Note: could not push planning branch cache (non-fatal)." >&2
+      fi
+    fi
   fi
 fi
 
-# ── 4. Print context summary for Claude ──────────────────────────────────────
+# ── 4. Print context summary ──────────────────────────────────────────────────
 echo ""
 echo "=== Planning Context Loaded ==="
 echo "Branch: $(git branch --show-current 2>/dev/null || echo unknown)"
