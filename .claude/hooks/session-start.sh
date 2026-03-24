@@ -16,7 +16,7 @@
 set -euo pipefail
 
 REPO="hikusukih/writ"
-PLANNING_DIR="${CLAUDE_PROJECT_DIR:-$(pwd)}/runtime/planning"
+PLANNING_DIR="$HOME/.writ/planning"
 mkdir -p "$PLANNING_DIR"
 
 echo "=== Session Start ===" >&2
@@ -101,7 +101,7 @@ import json
 d = json.load(open('$PLANNING_DIR/issues.json'))
 print(d.get('count', 0))
 " 2>/dev/null || echo "?")
-  echo "Fetched $ISSUE_COUNT open issues → runtime/planning/issues.json" >&2
+  echo "Fetched $ISSUE_COUNT open issues → ~/.writ/planning/issues.json" >&2
 
   # Project boards
   echo "Fetching project boards..." >&2
@@ -146,7 +146,7 @@ print(json.dumps({'fetched_at': '${TIMESTAMP}', 'projects': result}, indent=2))
       echo "Warning: failed to fetch project board details" >&2
       echo "{\"fetched_at\": \"$TIMESTAMP\", \"projects\": []}" > "$PLANNING_DIR/board.json"
     }
-    echo "Fetched $PROJECT_COUNT project board(s) → runtime/planning/board.json" >&2
+    echo "Fetched $PROJECT_COUNT project board(s) → ~/.writ/planning/board.json" >&2
   else
     echo "{\"fetched_at\": \"$TIMESTAMP\", \"note\": \"No classic project boards found.\", \"projects\": []}" \
       > "$PLANNING_DIR/board.json"

@@ -8,7 +8,7 @@ Custom slash commands in `.claude/commands/`:
 - `/rectify` — Scan for inconsistencies between the documentation and the actual codebase, then print a summary report
 - `/summarize` — Produce a development summary covering the current state of the repository (recent PRs, open issues, build status, etc.)
 - `/state-of-system` — Inspect the actual codebase and print a State of System report to the conversation
-- `/load-context` — Re-read `runtime/planning/issues.json` and `board.json` (fetched at session start) and summarize open issues and board state
+- `/load-context` — Re-read `~/.writ/planning/issues.json` and `board.json` (fetched at session start) and summarize open issues and board state
 - `/change-directive [#N]` — Draft a structured Change Directive for a given issue or the current context; scaffolds scope, acceptance criteria, and key files
 - `/generate-tasks [#N]` — Break a Change Directive or issue into a concrete TodoWrite task list in dependency order, including integration test and docs update steps
 

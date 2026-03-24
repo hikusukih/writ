@@ -2,7 +2,7 @@ Read the planning context that was fetched at session start and summarize it for
 
 ## 1. Read planning files
 
-Read `runtime/planning/issues.json` and `runtime/planning/board.json`. If either file is missing or contains an `"error"` key, note it and explain how to fix it (set `GH_TOKEN` in the cloud environment configuration and restart the session).
+Read `~/.writ/planning/issues.json` and `~/.writ/planning/board.json`. If either file is missing or contains an `"error"` key, note it and explain how to fix it (set `GH_TOKEN` in the cloud environment configuration and restart the session).
 
 ## 2. Issues summary
 
