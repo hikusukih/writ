@@ -11,6 +11,7 @@ From `issues.json`, report:
 - Full list of **on-deck** issues: number, title, labels, one-line body preview
 - Full list of **needs-refinement** issues: number, title, labels, one-line body preview
 - Any issues labeled **blocked**: number, title
+- Group on-deck and needs-refinement issues by `phase-N` label if present (e.g. "Phase 1", "Phase 2", "unphased"); list phase groups in numeric order
 
 ## 3. Board summary
 
@@ -34,4 +35,4 @@ Report the current branch, last 5 commits, and how many files differ from main.
 Print a short "Ready" section listing:
 - What branch we're on
 - How many on-deck issues are available to work
-- What to run next (`/generate-tasks #N` to pick up an issue, or `/change-directive` to draft a change)
+- What to run next (`/generate-tasks #N` to pick up an issue, or refine a needs-refinement issue and label it on-deck)

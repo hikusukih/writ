@@ -9,8 +9,36 @@ Custom slash commands in `.claude/commands/`:
 - `/summarize` — Produce a development summary covering the current state of the repository (recent PRs, open issues, build status, etc.)
 - `/state-of-system` — Inspect the actual codebase and print a State of System report to the conversation
 - `/load-context` — Re-read `~/.writ/planning/issues.json` and `board.json` (fetched at session start) and summarize open issues and board state
-- `/change-directive [#N]` — Draft a structured Change Directive for a given issue or the current context; scaffolds scope, acceptance criteria, and key files
-- `/generate-tasks [#N]` — Break a Change Directive or issue into a concrete TodoWrite task list in dependency order, including integration test and docs update steps
+- `/generate-tasks #N` — Break issue #N into concrete GitHub sub-issues in dependency order (Research → Types → Core → Unit tests → Integration test → Docs); creates sub-issues via the GitHub MCP
+
+**Session start**: At the start of each planning session, automatically run `/summarize` then `/state-of-system` before responding to the user, to initialize full planning context.
+
+## Issue Body Convention
+
+When writing or refining a GitHub issue body, use this structure so `/generate-tasks` has enough context to decompose it:
+
+```
+## What
+[One paragraph: what changes and what the system does differently after.]
+
+## Why
+[Motivation: what problem this solves or what capability it enables.]
+
+## Scope
+**In:** [Bullet list of what's included]
+**Out:** [Bullet list of explicit exclusions]
+
+## Key files
+[Bullet list of src/ files most likely to change]
+
+## Acceptance criteria
+- [ ] [Verifiable condition]
+- [ ] Integration test passes (`npm run test:integration`)
+- [ ] CLAUDE.md updated if new source files or wiring changed
+
+## Open questions
+[Any unresolved design decisions; leave blank if none]
+```
 
 ## Documentation Conventions
 

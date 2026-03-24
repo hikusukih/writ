@@ -213,4 +213,4 @@ fi
 
 echo ""
 echo "Run /load-context to re-read issue files into the conversation."
-echo "Run /change-directive to draft a Change Directive."
+echo "IMPORTANT: Automatically run /summarize then /state-of-system before responding to the user."
