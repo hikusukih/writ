@@ -16,16 +16,13 @@ Custom slash commands in `.claude/commands/`:
 
 Four places hold different kinds of truth about this project — don't mix them:
 
-- **`docs/architecture/`** — describes *target systems*. These files document the intended design, even if the component isn't built yet. No implementation-status hedges here; Roadmap.md owns that. Update architecture docs when the design changes.
-- **`docs/planning/Roadmap.md`** — tracks *implementation status*. What's built, what's next, phase markers, known issues. Update it as components are completed or phases change.
-- **`docs/planning/backlog/`** — captures *future possibilities*. Features that are potentially valuable but not yet committed to the Roadmap. Each item has its own file; `backlog.md` is the index. When creating, renaming, promoting, or removing a backlog item, update `backlog.md` to match.
+- **`docs/architecture/`** — describes *target systems*. These files document the intended design, even if the component isn't built yet. Update architecture docs when the design changes.
+- **`docs/planning/backlog/`** — captures *future possibilities*. Features that are potentially valuable but not yet committed to active development. Each item has its own file; `backlog.md` is the index. When creating, renaming, promoting, or removing a backlog item, update `backlog.md` to match.
 - **`CLAUDE.md`** (this file) — the *honest developer guide*. Describes the current state of the code: how to build/run/test, what's actually wired vs. not, key source files. Keep it accurate to reality, not aspirational.
 
-When adding new information: architecture design → `docs/architecture/`; build status → `Roadmap.md`; speculative/future features → `docs/planning/backlog/`; how to work with the code → `CLAUDE.md`.
+When adding new information: architecture design → `docs/architecture/`; speculative/future features → `docs/planning/backlog/`; how to work with the code → `CLAUDE.md`.
 
-**CLAUDE.md accuracy**: When a Roadmap item moves to `[x]`, update CLAUDE.md to reflect the new current state — key source files, current wiring diagram, provider notes, etc. CLAUDE.md should always describe the actual running code, not an aspirational state. Before committing a completed parent task, verify that CLAUDE.md still accurately reflects the current code.
-
-**Roadmap completion dates**: When marking a roadmap task `[x]`, append the completion date in parentheses: `[x] (completed YYYY-MM-DD)`. Use the date the task was verified working, not the date work started. If the date can be inferred from git history, use that; otherwise use today's date.
+**CLAUDE.md accuracy**: When a feature is completed, update CLAUDE.md to reflect the new current state — key source files, current wiring diagram, provider notes, etc. CLAUDE.md should always describe the actual running code, not an aspirational state. Before committing a completed parent task, verify that CLAUDE.md still accurately reflects the current code.
 
 ### Terminology Conventions
 
@@ -33,4 +30,4 @@ Terms with project-specific definitions are italicized: *Agent*, *Script*, *Skil
 
 ## Specs & Planning
 
-Architecture specs live in `docs/architecture/`. Start with `docs/architecture/Overview.md` for the big picture. See `docs/planning/Roadmap.md` for implementation status.
+Architecture specs live in `docs/architecture/`. Start with `docs/architecture/Overview.md` for the big picture.

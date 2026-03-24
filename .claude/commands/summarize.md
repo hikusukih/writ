@@ -38,7 +38,7 @@ Report: total tests, passed, failed, skipped for each suite. If tests fail, list
 
 Run: `git diff --name-only origin/main HEAD` and `git log --oneline -20 --name-only`
 
-Highlight any changes to: `CLAUDE.md`, `docs/architecture/`, `docs/planning/Roadmap.md`, `src/agents/`, `src/types.ts`, `src/schemas.ts`.
+Highlight any changes to: `CLAUDE.md`, `docs/architecture/`, `src/agents/`, `src/types.ts`, `src/schemas.ts`.
 
 ## 6. TODOs and open questions in code
 

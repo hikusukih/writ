@@ -57,9 +57,9 @@ Report:
 
 ## Section 6: Known gaps and tech debt
 
-Read `docs/planning/Roadmap.md` Technical Debt section and `docs/planning/OpenQuestions.md`.
+Read `docs/planning/OpenQuestions.md`.
 
-List items where: the roadmap says `[ ]` (not done) AND there is no corresponding code stub. These are genuine gaps, not stubs.
+List components or features referenced in architecture docs that have no corresponding code. These are genuine gaps.
 
 ---
 

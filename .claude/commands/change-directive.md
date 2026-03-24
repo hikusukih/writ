@@ -12,14 +12,13 @@ curl -sf -H "Authorization: token $GH_TOKEN" \
   "https://api.github.com/repos/hikusukih/writ/issues/$ARGS" 2>/dev/null
 ```
 
-If no argument was given, read `runtime/planning/issues.json` and list the on-deck issues, then ask the user which one to target.
+If no argument was given, read `~/.writ/planning/issues.json` and list the on-deck issues, then ask the user which one to target.
 
-If `GH_TOKEN` is unset, work from what's in `runtime/planning/issues.json` or ask the user to describe the change.
+If `GH_TOKEN` is unset, work from what's in `~/.writ/planning/issues.json` or ask the user to describe the change.
 
 ## 2. Read relevant context
 
 - Read `CLAUDE.md` for current architecture and key source files
-- Read `docs/planning/Roadmap.md` for phase and status context
 - Read any architecture docs in `docs/architecture/` relevant to the feature area
 
 ## 3. Draft the Change Directive
@@ -32,8 +31,6 @@ Output a Change Directive in this format:
 
 **Issue:** #N — [title]
 **Branch:** [suggested branch name, e.g. `feat/short-description`]
-**Phase:** [Roadmap phase this belongs to]
-
 ## What
 
 [2–4 sentences describing the change. What is being built or modified? What is the user-visible or system-visible outcome?]
@@ -59,7 +56,6 @@ Output a Change Directive in this format:
 - [ ] [Specific, testable criterion]
 - [ ] [Integration test passes (describe what it validates)]
 - [ ] [CLAUDE.md updated if new source files added]
-- [ ] [Roadmap.md updated if a phase item is completed]
 
 ## Open questions
 

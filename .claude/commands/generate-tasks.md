@@ -19,7 +19,6 @@ If no argument, check the conversation for a recently drafted Change Directive. 
 Read these files to understand current wiring and patterns before generating tasks:
 - `CLAUDE.md` (Key Source Files, Code Patterns, Integration Test Requirements)
 - Relevant files in `src/` based on the feature area
-- `docs/planning/Roadmap.md` to understand phase context
 
 ## 3. Generate the task list
 
@@ -31,7 +30,7 @@ Task list structure:
 3. **Core implementation** — main source files to create or modify, in dependency order
 4. **Unit tests** — `*.test.ts` files alongside each new module
 5. **Integration test** — add or extend `src/integration/pipeline.integration.test.ts` (required per CLAUDE.md)
-6. **Docs updates** — CLAUDE.md, Roadmap.md, architecture docs if needed
+6. **Docs updates** — CLAUDE.md, architecture docs if needed
 7. **Commit and push** — final step
 
 Rules for tasks:
