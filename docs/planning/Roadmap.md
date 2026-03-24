@@ -165,6 +165,8 @@ These require the full Phase 2 review chain before they're safe to build. Develo
 
 *Tier 5 — Infrastructure + Deployment: containerize before Adjutant — the Adjutant will install software and reach outside the system, which should happen inside a container.*
 
+- **Gist-based command channel** *(In progress)*: Private GitHub Gist as pull-based command channel for the live instance. Poll script fetches Gist and writes to `runtime/inbox/` (filesystem dead drop). IOAdapter integration pending. Bootstrap cron documented; Writ should self-schedule polling as an early self-management task. See [ADR-0001](../decisions/0001-gist-command-channel.md).
+
 - **(15)** **Containerization** *(Backlog)*: AgentOS as a self-contained deployable container. Prerequisite for Gitea and dashboard. Stabilize the system first. See [`docs/planning/backlog/backlog-containerization.md`](backlog/backlog-containerization.md).
 - **(16)** **Adjutant**: Cron-based maintenance + LLM-backed advisor. Runs inside the container.
 - **(17)** **Gitea Integration** *(Backlog)*: Embedded Gitea for script repo hosting and human inspection. Depends on containerization. See [`docs/planning/backlog/backlog-gitea.md`](backlog/backlog-gitea.md).

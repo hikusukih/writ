@@ -150,7 +150,15 @@ Never delete or overwrite files under `src/instance/identity/` without FAFC-styl
 - **Zod validation**: All JSON read from disk or parsed from Claude responses validated with Zod schemas.
 - **Tests alongside source**: `foo.ts` → `foo.test.ts` in same directory. Vitest with mocked Claude client.
 - **Integration tests**: `src/integration/*.integration.test.ts` — run via `npm run test:integration`. Use `TestAdapter` (`src/io/TestAdapter.ts`) + `MockLLMClient` (`src/test-utils/MockLLMClient.ts`) for full pipeline coverage. Tests import functions directly — no process spawning, no readline, no `CLIAdapter`. `npm test` excludes these; `npm run test:all` includes both. **When implementing a new feature, add or extend an integration test in `src/integration/pipeline.integration.test.ts` to cover the happy path through the full pipeline.**
-- **Script frontmatter**: Shell scripts use `# @name`, `# @description`, `# @param` comment headers for discovery.
+- **Script frontmatter**: Shell scripts use comment-based frontmatter for discovery by `listScripts()` (`src/scripts/index.ts`). Headers must appear at the top of the file before any non-comment line — parsing stops at the first line that doesn't start with `#`. Pattern:
+  ```bash
+  #!/bin/bash
+  # @name my-script
+  # @description One-line description of what this script does
+  # @param PARAM_ONE First parameter (required)
+  # @param PARAM_TWO Second parameter (optional)
+  ```
+  `@name` sets the script ID used in instruction JSON. `@description` is surfaced to the LLM for script selection. Each `@param` names an environment variable the script expects; list them in the order they appear in the script. Scripts without valid frontmatter are silently skipped.
 
 ## Integration Test Requirements
 
