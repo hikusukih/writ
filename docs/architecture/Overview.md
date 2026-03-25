@@ -209,14 +209,8 @@ writ/
 │   │   ├── ModelManagement.md
 │   │   └── PromptEvolution.md
 │   ├── planning/              #   Implementation planning
-│   │   ├── Roadmap.md         #     Phase-by-phase task list
-│   │   ├── OpenQuestions.md
-│   │   ├── tasks/             #     Per-tier task lists
-│   │   └── backlog/           #     Speculative/future features not yet on the roadmap
-│   └── working/               #   Human↔Claude Code communication artifacts
-│       ├── fold-me-in.md      #     Staging area for notes to integrate
-│       ├── later-review.md    #     Items to review in next Claude session
-│       └── ClaudeScratchpad.md #    Durable scratchpad from Claude Code to Mike
+│   │   ├── Roadmap.md         #     Upcoming work by tier, linked to GitHub issues
+│   │   └── OpenQuestions.md   #     Living design decision log and meta-thoughts
 │
 ├── scripts/                   # Project tooling (dev/CI only)
 │   └── export-for-claude.sh   #   Bundle docs for Claude Project import

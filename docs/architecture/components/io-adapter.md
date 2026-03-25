@@ -15,7 +15,7 @@ The current system is tightly coupled to the CLI. As background jobs, Initiative
 
 **First implementation — CLI adapter**: The existing REPL becomes a CLI implementation of this interface. A child thread polls the job state store at an interval and surfaces completed job results as they arrive. Main thread handles user input as today.
 
-**Future implementations**: local HTTP endpoint, webhook receiver, desktop notification, web dashboard (see `docs/planning/backlog/backlog-dashboard.md`). Each is an independent adapter — adding one doesn't affect others.
+**Future implementations**: local HTTP endpoint, webhook receiver, desktop notification, web dashboard ([#7](https://github.com/hikusukih/writ/issues/7)). Each is an independent adapter — adding one doesn't affect others.
 
 **Cron/scheduled triggers** fit as an inbound adapter type — a scheduler fires an inbound message on a schedule. Initiatives use this path.
 
