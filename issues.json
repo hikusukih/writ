@@ -1,7 +1,31 @@
 {
-  "fetched_at": "2026-03-25T19:30:14Z",
+  "fetched_at": "2026-03-25T19:42:52Z",
   "count": 25,
   "issues": [
+    {
+      "number": 2,
+      "title": "Initiative Table &amp; Persistence",
+      "state": "open",
+      "labels": [],
+      "assignees": [],
+      "milestone": "Tier 4 \u2013 Async & Initiatives",
+      "created_at": "2026-02-27T06:50:20Z",
+      "updated_at": "2026-03-25T19:36:43Z",
+      "url": "https://github.com/hikusukih/writ/issues/2",
+      "body_preview": "A persistent table for Initiatives, separate from the Job table. Initiatives own *why* and *when*; Jobs own *what* and *how*. When an Initiative's cron fires, it creates (or re-runs) a Job \u2014 the Initiative itself doesn't execute work directly.\n\n## Why\nThe Job Graph provides execution. But recurring,"
+    },
+    {
+      "number": 1,
+      "title": "User Statement Log",
+      "state": "open",
+      "labels": [],
+      "assignees": [],
+      "milestone": "Tier 4 \u2013 Async & Initiatives",
+      "created_at": "2026-02-27T06:50:11Z",
+      "updated_at": "2026-03-25T19:32:00Z",
+      "url": "https://github.com/hikusukih/writ/issues/1",
+      "body_preview": "A persistent, append-only log of user statements the system considers *evidence* for work. Provides an N:N join between Jobs and Statements, enabling provenance queries, drift detection, and conflict detection across Initiatives.\n\n## Why\nJobs and Initiatives need traceable justification. When the sy"
+    },
     {
       "number": 10,
       "title": "Developer/Writer Branch-Based Script Staging",
@@ -49,18 +73,6 @@
       "updated_at": "2026-03-25T04:10:53Z",
       "url": "https://github.com/hikusukih/writ/issues/5",
       "body_preview": "Gitea embedded in the AgentOS container, hosting the script repository. A port is exposed so the human operator can inspect scripts, history, and PRs via browser without SSH access. Agents interact with Gitea via its API for branch and PR operations.\n\n## Motivation\nScripts are the system's growing c"
-    },
-    {
-      "number": 2,
-      "title": "Initiative Table & Persistence",
-      "state": "open",
-      "labels": [],
-      "assignees": [],
-      "milestone": "Tier 4 \u2013 Async & Initiatives",
-      "created_at": "2026-02-27T06:50:20Z",
-      "updated_at": "2026-03-25T04:10:45Z",
-      "url": "https://github.com/hikusukih/writ/issues/2",
-      "body_preview": "A persistent table for Initiatives, separate from the Job table. Initiatives own *why* and *when*; Jobs own *what* and *how*. When an Initiative's cron fires, it creates (or re-runs) a Job.\n\n## Motivation\nAn Initiative needs to survive restarts, be queryable ('what ongoing things do I have?'), and m"
     },
     {
       "number": 37,
@@ -218,18 +230,6 @@
       "updated_at": "2026-03-25T04:09:09Z",
       "url": "https://github.com/hikusukih/writ/issues/3",
       "body_preview": "Per-channel activity indicators and acknowledgment patterns for asynchronous job execution. Each IOAdapter implementation handles its own throbber/spinner; the Orchestrator provides the timing contract.\n\n## Motivation\nWhen a job takes longer than expected, the user needs feedback: either a visual in"
-    },
-    {
-      "number": 1,
-      "title": "User Statement Log",
-      "state": "open",
-      "labels": [],
-      "assignees": [],
-      "milestone": "Tier 4 \u2013 Async & Initiatives",
-      "created_at": "2026-02-27T06:50:11Z",
-      "updated_at": "2026-03-25T04:09:08Z",
-      "url": "https://github.com/hikusukih/writ/issues/1",
-      "body_preview": "A persistent, append-only log of user statements the system considers evidence for work. Provides an N:N join between Jobs and Statements, enabling provenance queries, drift detection, and conflict detection across Initiatives.\n\n## Motivation\nJobs and Initiatives need traceable justification. When t"
     },
     {
       "number": 52,
