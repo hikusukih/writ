@@ -38,9 +38,9 @@ See `CLAUDE.md` for the full source file map.
 | Pre-Execution Semantic Review (stubbed gate) | Built — Phase 3 Tier 3 (completed 2026-02-25) |
 | Integration Test Harness (`TestAdapter`, `MockLLMClient`, 5 smoke tests) | Built — Phase 3 Tier 3 (completed 2026-03-11) |
 | Job Graph & Scheduler | Built — Phase 3 Tier 4 (completed 2026-03-20) |
-| Initiative system | Phase 3 — Tier 4 |
-| USER.md | Phase 3 — Tier 6 |
-| Adjutant | Phase 3 — Tier 5 |
+| Initiative system | Phase 3 — Tier 4 — [#46](https://github.com/hikusukih/writ/issues/46) |
+| USER.md / Get-to-know-the-user | Phase 3 — Tier 6 — [#49](https://github.com/hikusukih/writ/issues/49) |
+| Adjutant | Phase 3 — Tier 5 — [#48](https://github.com/hikusukih/writ/issues/48) |
 
 ---
 
@@ -159,30 +159,30 @@ These require the full Phase 2 review chain before they're safe to build. Develo
 *Tier 4 is the architectural transition point: the linear GP → LP → Executor pipeline is replaced by job-based dispatch. After Tier 4, all execution routes through the Job Graph.*
 
 - **(11)** **Job Graph & Scheduler** `[x]` (completed 2026-03-20): `src/jobs/` — Job types (`execute_script`, `develop_script`, `plan`, `notify_user`, `replan`, `initiative_setup`). Monotonic IDs for cycle prevention. Persistent store in `runtime/jobs/`. DAG scheduler with dependency resolution, concurrent execution (default limit 3), callbacks. Orchestrator refactored to job-based dispatch; `DefaultJobExecutor` routes job types to GP/LP/DW/Executor/Compiler. Throbber/ack pattern: configurable timeout per job type, synchronous UX for fast jobs, async follow-up for slow ones. Channel routing via `IOAdapter.getChannel()`. See [JobGraph.md](../architecture/JobGraph.md) for the architecture spec.
-- **(12)** **User Statement Log** *(Backlog)* `[ ]`: `src/statements/` — append-only log in `runtime/statements/`. N:N evidence join between jobs and statements. Supersession lifecycle. Wired into Orchestrator for statement extraction. See [`backlog-statement-log.md`](backlog/backlog-statement-log.md).
-- **(13)** **Initiative Table & Persistence** *(Backlog)* `[ ]`: `src/initiatives/` — persistent table in `runtime/initiatives/`. Cron expressions, architecture types, stop conditions. Separate from job store. See [`backlog-initiative-table.md`](backlog/backlog-initiative-table.md).
-- **(14)** **Initiative system** `[ ]`: InitiativeBuilder agent registered in `registry.json`. LLM determines initiative parameters from Orchestrator-identified patterns. Non-Static architectures route through HJA. Cron trigger stub (checked per orchestrator tick, not system cron). See [OpenQuestions.md §Initiatives](OpenQuestions.md#initiatives).
+- **(12)** **User Statement Log** *(Backlog)* `[ ]` — **[#1](https://github.com/hikusukih/writ/issues/1)**: `src/statements/` — append-only log in `runtime/statements/`. N:N evidence join between jobs and statements. Supersession lifecycle. Wired into Orchestrator for statement extraction. See [`backlog-statement-log.md`](backlog/backlog-statement-log.md).
+- **(13)** **Initiative Table & Persistence** *(Backlog)* `[ ]` — **[#2](https://github.com/hikusukih/writ/issues/2)**: `src/initiatives/` — persistent table in `runtime/initiatives/`. Cron expressions, architecture types, stop conditions. Separate from job store. See [`backlog-initiative-table.md`](backlog/backlog-initiative-table.md).
+- **(14)** **Initiative system** `[ ]` — **[#46](https://github.com/hikusukih/writ/issues/46)**: InitiativeBuilder agent registered in `registry.json`. LLM determines initiative parameters from Orchestrator-identified patterns. Non-Static architectures route through HJA. Cron trigger stub (checked per orchestrator tick, not system cron). See [OpenQuestions.md §Initiatives](OpenQuestions.md#initiatives).
 
 *Tier 5 — Infrastructure + Deployment: containerize before Adjutant — the Adjutant will install software and reach outside the system, which should happen inside a container.*
 
-- **Gist-based command channel** *(In progress)*: Private GitHub Gist as pull-based command channel for the live instance. Poll script fetches Gist and writes to `runtime/inbox/` (filesystem dead drop). IOAdapter integration pending. Bootstrap cron documented; Writ should self-schedule polling as an early self-management task. See [ADR-0001](../decisions/0001-gist-command-channel.md).
+- **Gist-based command channel** *(In progress)* — **[#47](https://github.com/hikusukih/writ/issues/47)** (parent; sub-issues [#33](https://github.com/hikusukih/writ/issues/33), [#35](https://github.com/hikusukih/writ/issues/35), [#36](https://github.com/hikusukih/writ/issues/36)): Private GitHub Gist as pull-based command channel for the live instance. Poll script fetches Gist and writes to `runtime/inbox/` (filesystem dead drop). IOAdapter integration pending. Bootstrap cron documented; Writ should self-schedule polling as an early self-management task. See [ADR-0001](../decisions/0001-gist-command-channel.md).
 
-- **(15)** **Containerization** *(Backlog)*: AgentOS as a self-contained deployable container. Prerequisite for Gitea and dashboard. Stabilize the system first. See [`docs/planning/backlog/backlog-containerization.md`](backlog/backlog-containerization.md).
-- **(16)** **Adjutant**: Cron-based maintenance + LLM-backed advisor. Runs inside the container.
-- **(17)** **Gitea Integration** *(Backlog)*: Embedded Gitea for script repo hosting and human inspection. Depends on containerization. See [`docs/planning/backlog/backlog-gitea.md`](backlog/backlog-gitea.md).
-- **(18)** **Script Branch Workflow + Code-Reviewing-Agent** *(Backlog)*: Scripts developed on branches, merged via reviewed PR. Depends on Gitea. See [`docs/planning/backlog/backlog-branch-workflow.md`](backlog/backlog-branch-workflow.md).
+- **(15)** **Containerization** *(Backlog)* — **[#4](https://github.com/hikusukih/writ/issues/4)**: AgentOS as a self-contained deployable container. Prerequisite for Gitea and dashboard. Stabilize the system first. See [`docs/planning/backlog/backlog-containerization.md`](backlog/backlog-containerization.md).
+- **(16)** **Adjutant** — **[#48](https://github.com/hikusukih/writ/issues/48)**: Cron-based maintenance + LLM-backed advisor. Runs inside the container.
+- **(17)** **Gitea Integration** *(Backlog)* — **[#5](https://github.com/hikusukih/writ/issues/5)**: Embedded Gitea for script repo hosting and human inspection. Depends on containerization. See [`docs/planning/backlog/backlog-gitea.md`](backlog/backlog-gitea.md).
+- **(18)** **Script Branch Workflow + Code-Reviewing-Agent** *(Backlog)* — **[#6](https://github.com/hikusukih/writ/issues/6)**: Scripts developed on branches, merged via reviewed PR. Depends on Gitea. See [`docs/planning/backlog/backlog-branch-workflow.md`](backlog/backlog-branch-workflow.md).
 
 *Tier 6 — Quality of Life + Polish*
 
-- **(19)** **Get-to-know-the-user**: Proactive onboarding loop, periodic USER.MD updates via conversation, and honest disclosure of system shortcomings and known failure modes to the user. No hard dependencies.
-- **(20)** **Prompt evolution**: A/B testing of prompt changes with performance tracking. Needs BIG_BROTHER running first to have data.
-- **(21)** **Model management**: Router selecting cheapest competent model per task. Low urgency until enough distinct task types exist to route across.
-- **(22)** **System health assessment / agent refresh**: Proactive coherence maintenance — periodic review of agent configs against CONSTITUTION.MD and SOUL.MD outside of flag triggers. Natural once BIG_BROTHER is stable. See [OpenQuestions.md §16](OpenQuestions.md#16-system-health-assessment--agent-refresh).
-- **(23)** **Web Dashboard** *(Backlog)*: Browser UI for system visibility, job status, review history, FAFC resolution. Depends on IOAdapter + containerization. See [`docs/planning/backlog/backlog-dashboard.md`](backlog/backlog-dashboard.md).
+- **(19)** **Get-to-know-the-user** — **[#49](https://github.com/hikusukih/writ/issues/49)**: Proactive onboarding loop, periodic USER.MD updates via conversation, and honest disclosure of system shortcomings and known failure modes to the user. No hard dependencies.
+- **(20)** **Prompt evolution** — **[#50](https://github.com/hikusukih/writ/issues/50)**: A/B testing of prompt changes with performance tracking. Needs BIG_BROTHER running first to have data.
+- **(21)** **Model management** — **[#51](https://github.com/hikusukih/writ/issues/51)**: Router selecting cheapest competent model per task. Low urgency until enough distinct task types exist to route across. See also [#28](https://github.com/hikusukih/writ/issues/28) (Ollama-specific subset).
+- **(22)** **System health assessment / agent refresh** — **[#52](https://github.com/hikusukih/writ/issues/52)**: Proactive coherence maintenance — periodic review of agent configs against CONSTITUTION.MD and SOUL.MD outside of flag triggers. Natural once BIG_BROTHER is stable. See [OpenQuestions.md §16](OpenQuestions.md#16-system-health-assessment--agent-refresh).
+- **(23)** **Web Dashboard** *(Backlog)* — **[#7](https://github.com/hikusukih/writ/issues/7)**: Browser UI for system visibility, job status, review history, FAFC resolution. Depends on IOAdapter + containerization. See [`docs/planning/backlog/backlog-dashboard.md`](backlog/backlog-dashboard.md).
 
 *Tier 7 — Speculative*
 
-- **(24)** **ClawdBot Integration & Untrusted Execution** *(Backlog)*: Sandbox model for imported skills/agents outside Writ's review chain. When the core system is solid. See [`docs/planning/backlog/backlog-clawdbot.md`](backlog/backlog-clawdbot.md).
+- **(24)** **ClawdBot Integration & Untrusted Execution** *(Backlog)* — **[#8](https://github.com/hikusukih/writ/issues/8)**: Sandbox model for imported skills/agents outside Writ's review chain. When the core system is solid. See [`docs/planning/backlog/backlog-clawdbot.md`](backlog/backlog-clawdbot.md).
 
 ---
 
