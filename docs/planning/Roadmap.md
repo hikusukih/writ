@@ -44,8 +44,6 @@ See `CLAUDE.md` for the full source file map.
 
 ### Tier 4 — Async + Initiatives
 
-Task list: [`tasks-tier4-async-initiatives.md`](tasks/tasks-tier4-async-initiatives.md)
-
 - **User Statement Log** — [#1](https://github.com/hikusukih/writ/issues/1)
 - **Initiative Table & Persistence** — [#2](https://github.com/hikusukih/writ/issues/2)
 - **Initiative system / InitiativeBuilder** — [#46](https://github.com/hikusukih/writ/issues/46)
