@@ -39,6 +39,10 @@ An action *Agent* (not a *Reviewer*, not *OS Class*) triggered by *Reviewer-Revi
 A static, deterministic function (not LLM-backed) that validates instruction JSON, composes shell *Scripts* from trusted scripts, runs them, and returns results. The last step before side effects.
 → [Full definition](architecture/agents/Executor.md#compiler)
 
+## *Developer/Writer* (DW)
+An action-class *Agent* that authors new shell *Scripts* from capability descriptions. Generates script content with `@name`/`@description`/`@param` frontmatter, stages it in `runtime/staging/scripts/`, passes it through Developer-Reviewer, and promotes approved scripts to `src/instance/scripts/`. Abbreviated *DW* throughout the codebase and docs.
+→ Key file: `src/agents/developer-writer.ts`
+
 ## *Constitution* (CONSTITUTION.MD)
 Core values and constraints for the system. The primary evaluation criterion for all *Reviewers*.
 → [Full definition](architecture/AgentIdentityAndState.md#constitutionmd)
