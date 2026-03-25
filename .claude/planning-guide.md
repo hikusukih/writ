@@ -59,3 +59,86 @@ Terms with project-specific definitions are italicized: *Agent*, *Script*, *Skil
 ## Specs & Planning
 
 Architecture specs live in `docs/architecture/`. Start with `docs/architecture/Overview.md` for the big picture.
+
+---
+
+## Claude Code Planning Environment
+
+This section documents the setup for Claude Code on the web, where the file tree is not visible
+and the environment must be reconstructed from documentation alone.
+
+### Repository layout (planning-relevant files)
+
+```
+.claude/
+  settings.json               # Registers the SessionStart hook
+  hooks/
+    session-start.sh           # Runs on every session start/resume (see below)
+  commands/
+    load-context.md            # /load-context  — summarizes ~/.writ/planning/ files
+    summarize.md               # /summarize     — dev summary (PRs, branches, tests)
+    state-of-system.md         # /state-of-system — live codebase inspection report
+    rectify.md                 # /rectify       — doc vs code consistency scan
+    generate-tasks.md          # /generate-tasks #N — breaks issue into sub-issues
+  planning-guide.md            # This file (included from CLAUDE.md via @)
+```
+
+### External planning files (`~/.writ/planning/`)
+
+These files live **outside the working tree** so they don't pollute git status. They are
+written by `session-start.sh` and read by `/load-context`.
+
+```
+~/.writ/planning/
+  issues.json    # Trimmed snapshot of open GitHub issues (number, title, labels,
+                 #   assignees, milestone, body_preview, updated_at)
+  board.json     # Classic project board snapshot (columns + card content_urls)
+```
+
+Both files include a `fetched_at` timestamp. If `GH_TOKEN` was not set when the session
+started, they may contain `{"error": "GH_TOKEN not set, no cache available", ...}`.
+
+### Session-start hook (`session-start.sh`)
+
+Registered in `settings.json` as a `SessionStart` hook — Claude Code runs it automatically
+on every session start or resume. It does **not** run during mid-session tool calls.
+
+**What it does (in order):**
+
+1. `git fetch origin main` — keeps the local main ref current for rebase reference
+2. `git fetch origin planning` — pulls the planning branch cache (see below)
+3. Load planning data:
+   - **If `GH_TOKEN` is set**: fetch live from GitHub API → write `issues.json` + `board.json` → push a snapshot commit to `origin/planning` (git plumbing, no checkout — working tree untouched)
+   - **If `GH_TOKEN` is unset**: read `issues.json` / `board.json` from `origin/planning` cache as fallback
+4. Print a summary to stderr (branch name, latest main commit, issue counts by label) — this is what appears in the `<user-prompt-submit-hook>` context block at session start
+
+### The `planning` branch
+
+A special git branch (`origin/planning`) used as a dead-drop cache for planning data.
+It contains only two files: `issues.json` and `board.json`. It is written by the hook
+using `git mktree` + `git commit-tree` + `git push` — the working tree is never checked
+out to this branch. This lets planning data persist across sessions even when `GH_TOKEN`
+is unavailable.
+
+### Required environment variables
+
+| Variable | Required | Purpose |
+|---|---|---|
+| `ANTHROPIC_API_KEY` | Yes (unless `LLM_PROVIDER=ollama`) | LLM calls |
+| `GH_TOKEN` | Strongly recommended | Live issue/board fetch + planning branch push |
+| `WRIT_GITHUB_TOKEN` | For Gist integration tests only | Gist-scoped PAT; separate from `GH_TOKEN` |
+
+`GH_TOKEN` must have at minimum: `repo` (read issues, push planning branch).
+Without it, planning data falls back to the cached snapshot on `origin/planning`.
+
+### Bootstrapping a new session from scratch
+
+If you are in a fresh Claude Code session with no prior context:
+
+1. Check the `<user-prompt-submit-hook>` block at the top of the conversation — the
+   session-start hook prints branch name, latest main, and issue counts there.
+2. Run `/load-context` to pull `~/.writ/planning/issues.json` into the conversation.
+3. Run `/summarize` + `/state-of-system` for full development context (the planning-guide
+   instructs Claude to run these automatically at session start).
+4. If issue data shows `"error": "GH_TOKEN not set"`, planning data may be stale —
+   set `GH_TOKEN` in the project's environment settings and start a new session.
