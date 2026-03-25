@@ -1,1 +1,247 @@
-{"note":"planning branch initialized — no live fetch yet","issues":[],"fetched_at":null}
+{
+  "fetched_at": "2026-03-25T03:51:39Z",
+  "count": 19,
+  "issues": [
+    {
+      "number": 41,
+      "title": "Script intake pipeline for third-party scripts",
+      "state": "open",
+      "labels": [
+        "needs-refinement"
+      ],
+      "assignees": [],
+      "milestone": null,
+      "created_at": "2026-03-24T00:08:33Z",
+      "updated_at": "2026-03-24T00:08:33Z",
+      "url": "https://github.com/hikusukih/writ/issues/41",
+      "body_preview": "When Writ ingests a script from an external source (downloaded, user-provided, community library), it should pass through a review pipeline before promotion to `src/instance/scripts/`.\n\n**Proposed flow:**\n1. **Download/receive** script into a quarantine directory (e.g., `runtime/staging/intake/`)\n2."
+    },
+    {
+      "number": 37,
+      "title": "Multi-source command input: array of input sources in config",
+      "state": "open",
+      "labels": [
+        "vaguebooking",
+        "backlog"
+      ],
+      "assignees": [],
+      "milestone": null,
+      "created_at": "2026-03-22T08:07:46Z",
+      "updated_at": "2026-03-22T08:07:46Z",
+      "url": "https://github.com/hikusukih/writ/issues/37",
+      "body_preview": "## Context\n\nCurrently the Gist command channel is configured via a single `WRIT_COMMAND_GIST_ID` in `.env`. This is sufficient for a single-user, single-channel setup.\n\n## Future direction\n\nSupport an array of input sources so you can:\n- Add channels (e.g., a second Gist for a different user)\n- Revo"
+    },
+    {
+      "number": 36,
+      "title": "Concurrent execution guard: lockfile or queue for Gist poll + pipeline overlap",
+      "state": "open",
+      "labels": [
+        "vaguebooking"
+      ],
+      "assignees": [],
+      "milestone": null,
+      "created_at": "2026-03-22T08:07:38Z",
+      "updated_at": "2026-03-22T08:07:38Z",
+      "url": "https://github.com/hikusukih/writ/issues/36",
+      "body_preview": "## Context\n\nCron fires on a fixed schedule. If a previous command is still being processed when the next poll runs, there is no guard preventing overlap.\n\n## Problem\n\n- Cron fires \u2192 poll script writes `A.cmd` to inbox\n- Pipeline starts processing `A.cmd`\n- Cron fires again \u2192 poll script writes `B.cm"
+    },
+    {
+      "number": 35,
+      "title": "Self-scheduled polling: replace bootstrap cron with Writ-managed job",
+      "state": "open",
+      "labels": [
+        "vaguebooking"
+      ],
+      "assignees": [],
+      "milestone": null,
+      "created_at": "2026-03-22T08:07:29Z",
+      "updated_at": "2026-03-22T08:07:29Z",
+      "url": "https://github.com/hikusukih/writ/issues/35",
+      "body_preview": "## Context\n\nThe Gist command channel currently relies on a bootstrap cron job to poll for incoming commands (see `docs/deployment/gist-command-channel.md`). This is a deliberate temporary measure.\n\n## What needs to happen\n\nWrit should eventually schedule its own polling via its internal job/initiati"
+    },
+    {
+      "number": 34,
+      "title": "Script discovery for agents: registry or convention for available scripts",
+      "state": "open",
+      "labels": [
+        "vaguebooking"
+      ],
+      "assignees": [],
+      "milestone": null,
+      "created_at": "2026-03-22T08:07:19Z",
+      "updated_at": "2026-03-22T08:07:19Z",
+      "url": "https://github.com/hikusukih/writ/issues/34",
+      "body_preview": "## Context\n\nAgents need a way to know what scripts are available and what they do. Currently there is no registry or discovery convention for this.\n\n## Problem\n\nWhen an agent (e.g., Lieutenant Planner) needs to delegate work to a shell script, it has no reliable way to enumerate available scripts, u"
+    },
+    {
+      "number": 33,
+      "title": "IOAdapter inbox integration: read .cmd files from runtime/inbox/ into pipeline",
+      "state": "open",
+      "labels": [
+        "vaguebooking"
+      ],
+      "assignees": [],
+      "milestone": null,
+      "created_at": "2026-03-22T08:07:10Z",
+      "updated_at": "2026-03-22T08:07:10Z",
+      "url": "https://github.com/hikusukih/writ/issues/33",
+      "body_preview": "## Context\n\nThe Gist command channel (see `docs/deployment/gist-command-channel.md`) writes plaintext commands as `.cmd` files to `runtime/inbox/`. This issue tracks wiring that inbox into the Writ pipeline.\n\n## What needs to happen\n\n- `IOAdapter` (or a new `GistAdapter`) should watch/read `.cmd` fi"
+    },
+    {
+      "number": 30,
+      "title": "Test issue via env var token",
+      "state": "open",
+      "labels": [],
+      "assignees": [],
+      "milestone": null,
+      "created_at": "2026-03-21T01:35:44Z",
+      "updated_at": "2026-03-21T01:35:44Z",
+      "url": "https://github.com/hikusukih/writ/issues/30",
+      "body_preview": "This issue was created using the GH_TOKEN environment variable to test token-based GitHub API access."
+    },
+    {
+      "number": 28,
+      "title": "Support per-agent model selection for Ollama provider",
+      "state": "open",
+      "labels": [],
+      "assignees": [],
+      "milestone": null,
+      "created_at": "2026-03-21T01:02:11Z",
+      "updated_at": "2026-03-21T01:02:11Z",
+      "url": "https://github.com/hikusukih/writ/issues/28",
+      "body_preview": "## Summary\n\nCurrently `OLLAMA_MODEL` is a single env var used for all agents. Different agents have different strengths \u2014 the orchestrator needs strong reasoning/dialogue, while the planner/executor/developer-writer need structured output and code generation.\n\n## Proposed approach\n\nAdd per-agent mod"
+    },
+    {
+      "number": 11,
+      "title": "Scenario CI via Claude Code Web",
+      "state": "open",
+      "labels": [],
+      "assignees": [],
+      "milestone": null,
+      "created_at": "2026-02-27T06:51:05Z",
+      "updated_at": "2026-02-27T13:20:37Z",
+      "url": "https://github.com/hikusukih/writ/issues/11",
+      "body_preview": "Use Claude Code web sessions as an automated integration testing environment. Each session boots a clean Writ instance, feeds it behavioral scenarios, observes results, and validates that the system performs as expected \u2014 including script authoring, review, and execution.\n\n## Motivation\nUnit tests v"
+    },
+    {
+      "number": 8,
+      "title": "ClawdBot Integration & Untrusted Execution",
+      "state": "open",
+      "labels": [],
+      "assignees": [],
+      "milestone": null,
+      "created_at": "2026-02-27T06:50:50Z",
+      "updated_at": "2026-02-27T13:20:34Z",
+      "url": "https://github.com/hikusukih/writ/issues/8",
+      "body_preview": "A potential sandbox model for imported ClawdBot skills and agents that lack Writ-native review guarantees. Also covers a vetting pipeline to transform imported skills into proper Writ scripts or agents.\n\n## Motivation\nClawdBot and similar systems may offer useful capabilities that would be expensive"
+    },
+    {
+      "number": 4,
+      "title": "Containerization",
+      "state": "open",
+      "labels": [],
+      "assignees": [],
+      "milestone": null,
+      "created_at": "2026-02-27T06:50:27Z",
+      "updated_at": "2026-02-27T13:20:30Z",
+      "url": "https://github.com/hikusukih/writ/issues/4",
+      "body_preview": "AgentOS ships as a self-contained deployable container. All internal services \u2014 Gitea, script runner, logs, dashboard \u2014 run inside it. A user deploys one container and gets a fully functional instance.\n\n## Motivation\nThe 'agent as a self-expanding OS' analogy implies a deployable unit. Containerizat"
+    },
+    {
+      "number": 10,
+      "title": "Developer/Writer Branch-Based Script Staging",
+      "state": "open",
+      "labels": [],
+      "assignees": [],
+      "milestone": null,
+      "created_at": "2026-02-27T06:50:59Z",
+      "updated_at": "2026-02-27T06:50:59Z",
+      "url": "https://github.com/hikusukih/writ/issues/10",
+      "body_preview": "Replace the flat `runtime/staging/scripts/` directory with a git branch workflow: each DW session creates a feature branch (keyed by GUID), scripts are committed there, and promotion to live means merging to main and pulling into `src/instance/scripts/`.\n\n## Motivation\nThe current staging model (wri"
+    },
+    {
+      "number": 9,
+      "title": "BIG_BROTHER Proactive Config Optimization",
+      "state": "open",
+      "labels": [],
+      "assignees": [],
+      "milestone": null,
+      "created_at": "2026-02-27T06:50:55Z",
+      "updated_at": "2026-02-27T06:50:55Z",
+      "url": "https://github.com/hikusukih/writ/issues/9",
+      "body_preview": "A proactive mode for BIG_BROTHER that analyzes accumulated execution logs and proposes agent config improvements based on observed patterns \u2014 not just in response to RR flags.\n\n## Motivation\nThe reactive path (RR flag \u2192 BB fix) addresses individual violations. A proactive path would detect systemic "
+    },
+    {
+      "number": 7,
+      "title": "Web Dashboard",
+      "state": "open",
+      "labels": [],
+      "assignees": [],
+      "milestone": null,
+      "created_at": "2026-02-27T06:50:46Z",
+      "updated_at": "2026-02-27T06:50:46Z",
+      "url": "https://github.com/hikusukih/writ/issues/7",
+      "body_preview": "A browser-based UI served from within the AgentOS container. Provides human visibility into the running system and a surface for resolving FAFC confirmations, without requiring terminal access.\n\n## Motivation\nAs the system grows more autonomous, the human needs low-friction ways to inspect what it's"
+    },
+    {
+      "number": 6,
+      "title": "Script Branch Workflow + Code-Reviewing-Agent",
+      "state": "open",
+      "labels": [],
+      "assignees": [],
+      "milestone": null,
+      "created_at": "2026-02-27T06:50:41Z",
+      "updated_at": "2026-02-27T06:50:41Z",
+      "url": "https://github.com/hikusukih/writ/issues/6",
+      "body_preview": "Scripts are developed on branches and merged to main only after a PR review. A Code-Reviewing-Agent participates in the review before merge, providing quality and correctness assessment. Formalizes script promotion with an accountable audit trail accessible via terminal and Gitea web UI.\n\n## Motivat"
+    },
+    {
+      "number": 5,
+      "title": "Gitea Integration",
+      "state": "open",
+      "labels": [],
+      "assignees": [],
+      "milestone": null,
+      "created_at": "2026-02-27T06:50:31Z",
+      "updated_at": "2026-02-27T06:50:31Z",
+      "url": "https://github.com/hikusukih/writ/issues/5",
+      "body_preview": "Gitea embedded in the AgentOS container, hosting the script repository. A port is exposed so the human operator can inspect scripts, history, and PRs via browser without SSH access. Agents interact with Gitea via its API for branch and PR operations.\n\n## Motivation\nScripts are the system's growing c"
+    },
+    {
+      "number": 3,
+      "title": "Throbber / Acknowledgment UX",
+      "state": "open",
+      "labels": [],
+      "assignees": [],
+      "milestone": null,
+      "created_at": "2026-02-27T06:50:24Z",
+      "updated_at": "2026-02-27T06:50:24Z",
+      "url": "https://github.com/hikusukih/writ/issues/3",
+      "body_preview": "Per-channel activity indicators and acknowledgment patterns for asynchronous job execution. Each IOAdapter implementation handles its own throbber/spinner; the Orchestrator provides the timing contract.\n\n## Motivation\nWhen a job takes longer than expected, the user needs feedback: either a visual in"
+    },
+    {
+      "number": 2,
+      "title": "Initiative Table & Persistence",
+      "state": "open",
+      "labels": [],
+      "assignees": [],
+      "milestone": null,
+      "created_at": "2026-02-27T06:50:20Z",
+      "updated_at": "2026-02-27T06:50:20Z",
+      "url": "https://github.com/hikusukih/writ/issues/2",
+      "body_preview": "A persistent table for Initiatives, separate from the Job table. Initiatives own *why* and *when*; Jobs own *what* and *how*. When an Initiative's cron fires, it creates (or re-runs) a Job.\n\n## Motivation\nAn Initiative needs to survive restarts, be queryable ('what ongoing things do I have?'), and m"
+    },
+    {
+      "number": 1,
+      "title": "User Statement Log",
+      "state": "open",
+      "labels": [],
+      "assignees": [],
+      "milestone": null,
+      "created_at": "2026-02-27T06:50:11Z",
+      "updated_at": "2026-02-27T06:50:11Z",
+      "url": "https://github.com/hikusukih/writ/issues/1",
+      "body_preview": "A persistent, append-only log of user statements the system considers evidence for work. Provides an N:N join between Jobs and Statements, enabling provenance queries, drift detection, and conflict detection across Initiatives.\n\n## Motivation\nJobs and Initiatives need traceable justification. When t"
+    }
+  ]
+}
