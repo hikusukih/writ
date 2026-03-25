@@ -91,7 +91,7 @@ This is a living document. Move items from "Open" to the appropriate Phase in `R
 - **Failure handling**: *Compiler* handle failures mid-sequence — stop on first error? Continue and collect all results? Configurable per step?
 
 **Open:**
-- **Fast-path reviewer coverage**: *(Resolved: fast-path removed. All requests route through GP → LP → Executor as of Tier 2. Fast-path is a future optimization if needed — see backlog.)*
+- **Fast-path reviewer coverage**: *(Resolved: fast-path removed. All requests route through GP → LP → Executor as of Tier 2. Fast-path is a future optimization if needed.)*
 
 ---
 
@@ -108,7 +108,7 @@ This is a living document. Move items from "Open" to the appropriate Phase in `R
 - How script runner handles failures and surfaces them to agents
 - Output feedback loop: how script results flow back up the chain
 - Pre-execution auth flow for root elevation
-- Should we limit sudo capability to just [Adjutant](/docs/architecture/agents/Adjutant.md) (or other small set of agents)?
+- Should we limit sudo capability to just [Adjutant](../architecture/agents/Adjutant.md) (or other small set of agents)?
 - **registry.json write permissions**: Both *Planner* and Executor have `canWrite: ["runtime/plans/"]` in the registry with no distinction of what each writes within that directory. Fine for now, but needs clarification when permissions are enforced — which agent writes which files within runtime/plans/? (Raised by: architecture review 2026-02-18)
 
 ---
