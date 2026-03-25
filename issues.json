@@ -1,7 +1,47 @@
 {
-  "fetched_at": "2026-03-25T20:23:14Z",
-  "count": 25,
+  "fetched_at": "2026-03-25T20:36:04Z",
+  "count": 24,
   "issues": [
+    {
+      "number": 51,
+      "title": "Model management: route requests to cheapest competent model per task",
+      "state": "open",
+      "labels": [
+        "backlog"
+      ],
+      "assignees": [],
+      "milestone": "Tier 6 \u2013 Quality of Life",
+      "created_at": "2026-03-25T04:08:34Z",
+      "updated_at": "2026-03-25T20:26:50Z",
+      "url": "https://github.com/hikusukih/writ/issues/51",
+      "body_preview": "## What\nA model router that selects the cheapest capable model for each agent invocation based on task type. Orchestrator/Reviewer tasks need strong reasoning; Planner/Executor/DW tasks need structured JSON output. The router maps agent role \u2192 appropriate model tier, with per-agent overrides availab"
+    },
+    {
+      "number": 7,
+      "title": "Web Dashboard",
+      "state": "open",
+      "labels": [],
+      "assignees": [],
+      "milestone": "Tier 6 \u2013 Quality of Life",
+      "created_at": "2026-02-27T06:50:46Z",
+      "updated_at": "2026-03-25T20:25:40Z",
+      "url": "https://github.com/hikusukih/writ/issues/7",
+      "body_preview": "A browser-based UI served from within the AgentOS container (or as a local HTTP server for development). Provides human visibility into the running system and a surface for resolving FAFC confirmations, without requiring terminal access.\n\n## Why\nAs the system grows more autonomous, the human needs l"
+    },
+    {
+      "number": 48,
+      "title": "Adjutant: maintenance agent",
+      "state": "open",
+      "labels": [
+        "backlog"
+      ],
+      "assignees": [],
+      "milestone": "Tier 5 \u2013 Infrastructure & Deployment",
+      "created_at": "2026-03-25T04:07:45Z",
+      "updated_at": "2026-03-25T20:25:23Z",
+      "url": "https://github.com/hikusukih/writ/issues/48",
+      "body_preview": "## What\nThe Adjutant is the system's maintenance and self-management agent. It is an OS-class agent with its own `adjutant-agent.md` config, whose tasks are modeled as system-class Initiatives that fire on cron schedules. Maintenance work (log rotation, job store pruning, staging cleanup, config coh"
+    },
     {
       "number": 11,
       "title": "Scenario CI via Claude Code Web",
@@ -138,30 +178,6 @@
       "body_preview": "A persistent, append-only log of user statements the system considers *evidence* for work. Provides an N:N join between Jobs and Statements, enabling provenance queries, drift detection, and conflict detection across Initiatives.\n\n## Why\nJobs and Initiatives need traceable justification. When the sy"
     },
     {
-      "number": 7,
-      "title": "Web Dashboard",
-      "state": "open",
-      "labels": [],
-      "assignees": [],
-      "milestone": "Tier 6 \u2013 Quality of Life",
-      "created_at": "2026-02-27T06:50:46Z",
-      "updated_at": "2026-03-25T04:10:59Z",
-      "url": "https://github.com/hikusukih/writ/issues/7",
-      "body_preview": "A browser-based UI served from within the AgentOS container. Provides human visibility into the running system and a surface for resolving FAFC confirmations, without requiring terminal access.\n\n## Motivation\nAs the system grows more autonomous, the human needs low-friction ways to inspect what it's"
-    },
-    {
-      "number": 28,
-      "title": "Support per-agent model selection for Ollama provider",
-      "state": "open",
-      "labels": [],
-      "assignees": [],
-      "milestone": "Tier 6 \u2013 Quality of Life",
-      "created_at": "2026-03-21T01:02:11Z",
-      "updated_at": "2026-03-25T04:09:25Z",
-      "url": "https://github.com/hikusukih/writ/issues/28",
-      "body_preview": "## Summary\n\nCurrently `OLLAMA_MODEL` is a single env var used for all agents. Different agents have different strengths \u2014 the orchestrator needs strong reasoning/dialogue, while the planner/executor/developer-writer need structured output and code generation.\n\n## Proposed approach\n\nAdd per-agent mod"
-    },
-    {
       "number": 41,
       "title": "Script intake pipeline for third-party scripts",
       "state": "open",
@@ -246,20 +262,6 @@
       "body_preview": "## What\nA periodic assessment that checks all agent configs (XYZ-AGENT.md files) for coherence against CONSTITUTION.md and SOUL.md, outside of RR flag triggers. When drift is detected \u2014 configs that contradict core values, are internally inconsistent, or reference deprecated patterns \u2014 the system fl"
     },
     {
-      "number": 51,
-      "title": "Model management: route requests to cheapest competent model per task",
-      "state": "open",
-      "labels": [
-        "backlog"
-      ],
-      "assignees": [],
-      "milestone": "Tier 6 \u2013 Quality of Life",
-      "created_at": "2026-03-25T04:08:34Z",
-      "updated_at": "2026-03-25T04:08:34Z",
-      "url": "https://github.com/hikusukih/writ/issues/51",
-      "body_preview": "## What\nA model router that selects the cheapest capable model for each agent invocation based on task type. Orchestrator/Reviewer tasks need strong reasoning; Planner/Executor/DW tasks need structured JSON output. The router maps agent role \u2192 appropriate model tier, with per-agent overrides availab"
-    },
-    {
       "number": 50,
       "title": "Prompt evolution: A/B testing of agent prompts",
       "state": "open",
@@ -286,20 +288,6 @@
       "updated_at": "2026-03-25T04:08:01Z",
       "url": "https://github.com/hikusukih/writ/issues/49",
       "body_preview": "## What\nA proactive onboarding loop that builds a persistent `USER.md` file capturing what the system has learned about the user: their preferences, working style, recurring goals, and known system shortcomings relevant to them. Writ periodically updates USER.md through conversation and discloses kn"
-    },
-    {
-      "number": 48,
-      "title": "Adjutant: cron-based maintenance agent",
-      "state": "open",
-      "labels": [
-        "backlog"
-      ],
-      "assignees": [],
-      "milestone": "Tier 5 \u2013 Infrastructure & Deployment",
-      "created_at": "2026-03-25T04:07:45Z",
-      "updated_at": "2026-03-25T04:07:45Z",
-      "url": "https://github.com/hikusukih/writ/issues/48",
-      "body_preview": "## What\nThe Adjutant is the system's maintenance and self-management agent. It runs on a cron schedule (via the Initiative system), performs periodic health checks, coordinates housekeeping tasks (log rotation, job store pruning, config coherence), and can act as a gatekeeper for tasks that require "
     },
     {
       "number": 47,
