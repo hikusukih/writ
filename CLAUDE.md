@@ -167,34 +167,6 @@ Every new feature that touches the pipeline requires an integration test in `src
 - Validate behavior end-to-end via `handleRequest()` → inspect `TestAdapter` output arrays
 - Use `MockLLMClient` for deterministic responses; if the feature needs new response shapes, add them to `MockLLMClient`
 - Features that add new agent roles or review paths must include both an "allow" (happy path) and a "deny/halt" test case
-- `/generate-tasks` and `/process-task-list` treat a missing integration test as incomplete work — the parent task is not done until the integration test passes
+- `/generate-tasks` treats a missing integration test as incomplete work — the parent task is not done until the integration test passes
 
-## Workflow Commands
-
-Custom slash commands in `.claude/commands/`:
-- `/rectify` — Scan for inconsistencies between the documentation and the actual codebase, then print a summary report
-- `/summarize` — Produce a development summary covering the current state of the repository (recent PRs, open issues, build status, etc.)
-- `/state-of-system` — Inspect the actual codebase and print a State of System report to the conversation
-
-## Documentation Conventions
-
-Four places hold different kinds of truth about this project — don't mix them:
-
-- **`docs/architecture/`** — describes *target systems*. These files document the intended design, even if the component isn't built yet. No implementation-status hedges here; Roadmap.md owns that. Update architecture docs when the design changes.
-- **`docs/planning/Roadmap.md`** — tracks *implementation status*. What's built, what's next, phase markers, known issues. Update it as components are completed or phases change.
-- **`docs/planning/backlog/`** — captures *future possibilities*. Features that are potentially valuable but not yet committed to the Roadmap. Each item has its own file; `backlog.md` is the index. When creating, renaming, promoting, or removing a backlog item, update `backlog.md` to match.
-- **`CLAUDE.md`** (this file) — the *honest developer guide*. Describes the current state of the code: how to build/run/test, what's actually wired vs. not, key source files. Keep it accurate to reality, not aspirational.
-
-When adding new information: architecture design → `docs/architecture/`; build status → `Roadmap.md`; speculative/future features → `docs/planning/backlog/`; how to work with the code → `CLAUDE.md`.
-
-**CLAUDE.md accuracy**: When a Roadmap item moves to `[x]`, update CLAUDE.md to reflect the new current state — key source files, current wiring diagram, provider notes, etc. CLAUDE.md should always describe the actual running code, not an aspirational state. This applies in particular when using `/process-task-list`: before committing a completed parent task, verify that CLAUDE.md still accurately reflects the current code.
-
-**Roadmap completion dates**: When marking a roadmap task `[x]`, append the completion date in parentheses: `[x] (completed YYYY-MM-DD)`. Use the date the task was verified working, not the date work started. If the date can be inferred from git history, use that; otherwise use today's date.
-
-### Terminology Conventions
-
-Terms with project-specific definitions are italicized: *Agent*, *Script*, *Skill*, etc. First use in each file links to `docs/dictionary.md`. Subsequent uses are bare italics. Only apply when using the project-defined meaning — generic English stays plain. See `docs/dictionary.md` for the full list of defined terms.
-
-## Specs & Planning
-
-Architecture specs live in `docs/architecture/`. Start with `docs/architecture/Overview.md` for the big picture. See `docs/planning/Roadmap.md` for implementation status.
+@.claude/planning-guide.md

@@ -21,7 +21,6 @@ Report: doc references with no corresponding code.
 List all files in `src/agents/` and `src/instance/scripts/`. Check each against:
 - `docs/architecture/` for design documentation
 - `CLAUDE.md` Key Source Files section
-- `docs/planning/Roadmap.md` Component Status table
 
 Report: implemented files with no documentation or roadmap entry.
 
