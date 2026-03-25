@@ -1,7 +1,49 @@
 {
-  "fetched_at": "2026-03-25T20:37:53Z",
-  "count": 24,
+  "fetched_at": "2026-03-25T20:42:07Z",
+  "count": 27,
   "issues": [
+    {
+      "number": 55,
+      "title": "Tech debt: implement request-modifications reviewer decision (re-call loop)",
+      "state": "open",
+      "labels": [
+        "tech-debt"
+      ],
+      "assignees": [],
+      "milestone": null,
+      "created_at": "2026-03-25T20:39:06Z",
+      "updated_at": "2026-03-25T20:39:06Z",
+      "url": "https://github.com/hikusukih/writ/issues/55",
+      "body_preview": "## What\nThe `request-modifications` reviewer decision is a defined output type in `ReviewInterface.md` and the `ReviewDecision` type, but `applyReview()` in `reviewed.ts` currently treats it as a halt rather than looping back to the subject agent with the requested changes.\n\n## Why\nWithout the re-ca"
+    },
+    {
+      "number": 54,
+      "title": "Tech debt: add error recovery for LLM API failures (rate limits, network)",
+      "state": "open",
+      "labels": [
+        "tech-debt"
+      ],
+      "assignees": [],
+      "milestone": null,
+      "created_at": "2026-03-25T20:38:54Z",
+      "updated_at": "2026-03-25T20:38:54Z",
+      "url": "https://github.com/hikusukih/writ/issues/54",
+      "body_preview": "## What\nLLM API call failures (rate limit 429, transient network errors, timeouts) currently surface as unhandled exceptions and kill the in-progress request. The system needs a basic retry/backoff strategy and graceful degradation (e.g., fall back to rule-based reviewer on transient LLM reviewer fa"
+    },
+    {
+      "number": 53,
+      "title": "Tech debt: upgrade to Node 20+ (vitest 4.x engine warning)",
+      "state": "open",
+      "labels": [
+        "tech-debt"
+      ],
+      "assignees": [],
+      "milestone": null,
+      "created_at": "2026-03-25T20:38:41Z",
+      "updated_at": "2026-03-25T20:38:41Z",
+      "url": "https://github.com/hikusukih/writ/issues/53",
+      "body_preview": "## What\nVitest 4.x emits an engine compatibility warning because the project specifies Node 18 in `package.json`. Upgrading to Node 20 (current LTS) resolves the warning and keeps the test runner happy.\n\n## Why\nThe warning clutters `npm test` output and signals drift from an EOL Node version. Node 2"
+    },
     {
       "number": 51,
       "title": "Model management: route requests to cheapest competent model per task",
