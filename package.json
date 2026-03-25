@@ -1,6 +1,6 @@
 {
-  "name": "domesticlaw",
-  "version": "0.1.0",
+  "name": "writ",
+  "version": "0.1.1",
   "description": "Self-improving multi-agent system",
   "type": "module",
   "main": "dist/index.js",
