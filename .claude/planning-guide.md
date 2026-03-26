@@ -6,12 +6,10 @@ This file is included from CLAUDE.md and covers planning workflow, documentation
 
 Custom slash commands in `.claude/commands/`:
 - `/rectify` — Scan for inconsistencies between the documentation and the actual codebase, then print a summary report
-- `/summarize` — Produce a development summary covering the current state of the repository (recent PRs, open issues, build status, etc.)
-- `/state-of-system` — Inspect the actual codebase and print a State of System report to the conversation
+- `/summarize` — Produce a development summary (recent PRs, open issues, TODOs, etc.). Runs `.claude/scripts/summarize.sh`; the session-start hook already runs this automatically in the planning env, so use the command only when you want a fresh mid-session refresh.
+- `/state-of-system` — Inspect the actual codebase and print a State of System report to the conversation. On-demand only.
 - `/load-context` — Re-read `~/.writ/planning/issues.json` and `board.json` (fetched at session start) and summarize open issues and board state
 - `/generate-tasks #N` — Break issue #N into concrete GitHub sub-issues in dependency order (Research → Types → Core → Unit tests → Integration test → Docs); creates sub-issues via the GitHub MCP
-
-**Session start**: When `CLAUDE_DEV_ENV_ID=planning` is set (the planning cloud environment only), automatically run `/summarize` then `/state-of-system` before responding to the user. Do **not** run these automatically in other environments (laptop, toolbox, etc.).
 
 ## Issue Body Convention
 
