@@ -20,13 +20,13 @@ Break the change into ordered sub-issues using these categories (skip categories
 
 1. **Research** — files to read and understand before writing code
 2. **Types/schema** — new or changed types in `src/types.ts` / `src/schemas.ts`
-3. **Core implementation** — source files to create or modify, in dependency order
-4. **Unit tests** — `*.test.ts` files alongside each new module
-5. **Integration test** — add or extend `src/integration/pipeline.integration.test.ts`
-6. **Docs** — CLAUDE.md and architecture docs, if new source files or wiring changes
+3. **Core implementation** — source files to create or modify, in dependency order. **Include the unit tests (`*.test.ts`) for each module in the same sub-issue** — implement the code and its tests together as one unit of work.
+4. **Integration test** — add or extend `src/integration/pipeline.integration.test.ts`
+5. **Docs** — CLAUDE.md and architecture docs, if new source files or wiring changes
 
 Rules:
 - Each sub-issue should be completable in a single focused implementation session
+- Unit tests live in the same sub-issue as the code they test — do not create separate sub-issues for unit tests
 - Features that touch the review chain need both a happy-path and a deny/halt integration test case
 - The integration test sub-issue is required (per CLAUDE.md) — never skip it
 
