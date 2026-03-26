@@ -26,6 +26,7 @@ describe("reviewWithLLM", () => {
     const result = await reviewWithLLM("List files in /tmp", "orchestrator", mockIdentity, client);
     expect(result.decision).toBe("allow");
     expect(result.reasoning).toBe("Content is safe.");
+    expect(result.degraded).toBeUndefined();
   });
 
   it("returns flag-and-halt when LLM says flag-and-halt", async () => {
@@ -73,6 +74,7 @@ describe("reviewWithLLM", () => {
     const result = await reviewWithLLM("Run sudo rm -rf /", "orchestrator", mockIdentity, client);
     expect(result.decision).toBe("flag-and-halt");
     expect(result.matchedRules).toContain("sudo-usage");
+    expect(result.degraded).toBe(true);
   });
 
   it("returns fafc with summary when LLM says fafc", async () => {
@@ -137,5 +139,6 @@ describe("reviewWithLLM", () => {
     const result = await reviewWithLLM("Clean content here.", "orchestrator", mockIdentity, client);
     // Rule-based review of "Clean content here." should allow
     expect(result.decision).toBe("allow");
+    expect(result.degraded).toBe(true);
   });
 });

@@ -84,11 +84,11 @@ Does this output violate any security constraints, ethical guidelines, or the sy
     };
   } catch (err) {
     // Fall back to rule-based review on LLM or parse failure
-    console.error(
-      `[reviewer] LLM review failed, falling back to rule-based: ${
-        err instanceof Error ? err.message : String(err)
-      }`
-    );
+    verbose("LLM reviewer: failed, falling back to rule-based", {
+      degraded: true,
+      subjectAgentId,
+      reason: err instanceof Error ? err.message : String(err),
+    });
     const fallbackResult = reviewOutput(content, identity);
 
     // Log fallback review decision (fire-and-forget)
@@ -97,6 +97,6 @@ Does this output violate any security constraints, ethical guidelines, or the sy
       appendReviewLog(entry, logsDir).catch(() => {});
     }
 
-    return fallbackResult;
+    return { ...fallbackResult, degraded: true };
   }
 }

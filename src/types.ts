@@ -24,6 +24,8 @@ export interface ReviewResult {
   matchedRules?: string[];
   modifications?: string;
   summary?: string;
+  /** True when the LLM reviewer failed and rule-based fallback was used instead. */
+  degraded?: boolean;
 }
 
 export interface PlanStep {
