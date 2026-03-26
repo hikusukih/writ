@@ -139,6 +139,7 @@ export async function handleRequest(
 
   // Step 2: General Planner creates a strategic plan (work assignments)
   verbose("Orchestrator: calling general planner", taskDescription);
+  if (adapter) await adapter.sendProgress("req", "General Planner: creating strategic plan...");
   const strategicPlan = await createStrategicPlan(
     client,
     taskDescription,
@@ -147,6 +148,7 @@ export async function handleRequest(
   );
 
   verbose("Orchestrator: strategic plan created", strategicPlan);
+  if (adapter) await adapter.sendProgress("req", `Strategic plan ready (${strategicPlan.assignments.length} assignment${strategicPlan.assignments.length === 1 ? "" : "s"})`);
   provenance.push({
     agentId: "planner",
     action: `created strategic plan ${strategicPlan.id}`,
@@ -311,6 +313,7 @@ export async function handleRequest(
   }
 
   // Step 4: Generate natural-language response
+  if (adapter) await adapter.sendProgress("req", "Orchestrator: synthesizing response...");
   const responsePrompt = buildResponsePrompt(
     userInput,
     taskDescription,

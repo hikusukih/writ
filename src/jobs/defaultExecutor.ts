@@ -33,6 +33,7 @@ export function createDefaultJobExecutor(
     async execute(job: Job, adapter: IOAdapter | undefined): Promise<unknown> {
       switch (job.type) {
         case "execute_script": {
+          if (adapter) await adapter.sendProgress(job.id, "Executor: mapping plan to instructions...");
           let plan = job.plan ?? null;
 
           // If no plan is directly attached, attempt to resolve it from the first dependency job's result.
@@ -53,6 +54,7 @@ export function createDefaultJobExecutor(
         }
 
         case "develop_script": {
+          if (adapter) await adapter.sendProgress(job.id, "Developer/Writer: generating script...");
           const existingScripts = await listScripts(scriptsDir);
           return generateScript(
             clientFactory("developer-writer"),
@@ -62,6 +64,7 @@ export function createDefaultJobExecutor(
         }
 
         case "plan": {
+          if (adapter) await adapter.sendProgress(job.id, "Lieutenant Planner: generating detailed plan...");
           const assignment: WorkAssignment = {
             id: job.id,
             description: job.goal,

@@ -83,6 +83,7 @@ export function createScheduler(
 
   async function executeJob(job: Job): Promise<void> {
     verbose("Scheduler: starting job", { id: job.id, type: job.type });
+    if (adapter) await adapter.sendProgress(job.id, `Starting: ${job.type}`);
     const updated = await store.updateJob(job.id, {
       status: "running",
       timestamps: { ...job.timestamps, started: easternTimestamp() },
@@ -96,6 +97,7 @@ export function createScheduler(
         timestamps: { ...updated.timestamps, completed: easternTimestamp() },
       });
       verbose("Scheduler: job completed", { id: job.id });
+      if (adapter) await adapter.sendProgress(job.id, `Complete: ${job.type}`);
       await processCallbacks(completed);
       notifyWaiters(completed);
     } catch (err) {
@@ -105,6 +107,7 @@ export function createScheduler(
         timestamps: { ...updated.timestamps, completed: easternTimestamp() },
       });
       verbose("Scheduler: job failed", { id: job.id, error: err instanceof Error ? err.message : String(err) });
+      if (adapter) await adapter.sendProgress(job.id, `Failed: ${job.type}`);
       await blockDependents(job.id);
       await processCallbacks(failed);
       notifyWaiters(failed);

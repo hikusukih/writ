@@ -129,6 +129,7 @@ export async function createDetailedPlanWithDW(
   while (result.missingScripts.length > 0 && dwCallCount < MAX_DW_CALLS) {
     const toCreate = result.missingScripts.slice(0, MAX_DW_CALLS - dwCallCount);
     verbose("LieutenantPlanner: commissioning scripts via DW", toCreate.map((s) => s.name));
+    if (options.adapter) await options.adapter.sendProgress("dw", `Developer/Writer: creating ${toCreate.length} missing script${toCreate.length === 1 ? "" : "s"}...`);
 
     const existingScripts = await listScripts(scriptsDir);
 
@@ -143,6 +144,7 @@ export async function createDetailedPlanWithDW(
         );
         dwCallCount++;
         verbose("LieutenantPlanner: DW script created", { name: missing.name, dwCallCount });
+        if (options.adapter) await options.adapter.sendProgress("dw", `Developer/Writer: script promoted (${dwCallCount}/${MAX_DW_CALLS})`);
       } catch (err) {
         verbose("LieutenantPlanner: DW script creation failed", {
           name: missing.name,

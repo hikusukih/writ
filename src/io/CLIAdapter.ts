@@ -1,5 +1,6 @@
 import { createInterface } from "node:readline";
 import type { IOAdapter } from "./IOAdapter.js";
+import { easternTimestamp } from "../logger.js";
 
 export interface CLIAdapterOptions {
   prompt?: string;
@@ -40,7 +41,7 @@ export function createCLIAdapter(options: CLIAdapterOptions = {}): IOAdapter {
     },
 
     sendProgress(jobId: string, message: string): void {
-      console.log(`[${jobId}] ${message}`);
+      console.log(`[${easternTimestamp()}] [${jobId}] ${message}`);
     },
 
     requestConfirmation(summary: string, details?: string): Promise<boolean> {
