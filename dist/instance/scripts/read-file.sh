@@ -3,7 +3,8 @@
 # @description Read a file and display with line numbers (scoped to project root)
 # @param FILE_PATH Path to the file to read
 
-ALLOWED_ROOT="/home/dmb/code/domestiClaw"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+ALLOWED_ROOT="${WRIT_ALLOWED_ROOT:-$(cd "$SCRIPT_DIR/../../.." && pwd)}"
 
 if [ -z "$FILE_PATH" ]; then
   echo "Error: FILE_PATH is required" >&2

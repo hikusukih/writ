@@ -100,7 +100,7 @@ export async function handleRequest(client, userInput, identity, scriptsDir, pla
         tmpJobsDir = dir;
         const store = await createJobStore(dir);
         const executor = createDefaultJobExecutor({
-            client,
+            clientFactory: (_agentId) => client,
             identity,
             scriptsDir,
             plansDir,
@@ -123,6 +123,9 @@ export async function handleRequest(client, userInput, identity, scriptsDir, pla
     // and their execution phases in parallel once planning completes.
     const allExecutionResults = [];
     const allResults = [];
+    // Throbber state — must be outside try so it's accessible in the finally/post-try section
+    const throbberMs = options?.throbberTimeoutMs ?? 10_000;
+    let sentAck = false;
     try {
         const jobPairs = [];
         for (const assignment of strategicPlan.assignments) {
@@ -160,8 +163,6 @@ export async function handleRequest(client, userInput, identity, scriptsDir, pla
         // Throbber timeout: race each waitForJob() against the configured timeout.
         // On the first timeout, send an acknowledgment and continue waiting.
         // If we sent an ack, deliver the final result asynchronously via adapter.sendResult().
-        const throbberMs = options?.throbberTimeoutMs ?? 10_000;
-        let sentAck = false;
         async function waitWithThrobber(jobId, jobType) {
             const timeout = options?.jobTypeTimeouts?.[jobType] ?? throbberMs;
             try {

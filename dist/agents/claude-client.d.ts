@@ -9,6 +9,7 @@ export interface LLMClient {
     sendMessage(systemPrompt: string, userMessage: string): Promise<ClaudeResponse>;
     sendMessages(systemPrompt: string, messages: MessageParam[]): Promise<ClaudeResponse>;
 }
+export declare function withRetry<T>(fn: () => Promise<T>, maxAttempts?: number): Promise<T>;
 export declare function createClaudeClient(apiKey?: string): LLMClient;
 export declare function getActiveModel(): string;
-export declare function createLLMClient(): LLMClient;
+export declare function createLLMClient(agentId?: string): LLMClient;

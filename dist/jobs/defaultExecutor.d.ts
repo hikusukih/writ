@@ -5,7 +5,7 @@ import type { IOAdapter } from "../io/IOAdapter.js";
 import type { LLMClient } from "../agents/claude-client.js";
 import type { IdentityContext } from "../types.js";
 export interface DefaultJobExecutorDeps {
-    client: LLMClient;
+    clientFactory: (agentId: string) => LLMClient;
     identity: IdentityContext;
     scriptsDir: string;
     plansDir: string;

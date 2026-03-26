@@ -1,7 +1,32 @@
 import { verbose } from "../logger.js";
-export function createOllamaClient(baseUrl, model) {
+const DEFAULT_OLLAMA_MODEL = "llama3.1:8b";
+/** Maps agent IDs to their per-agent env var names. */
+const AGENT_MODEL_ENV_KEYS = {
+    orchestrator: "OLLAMA_MODEL_ORCHESTRATOR",
+    planner: "OLLAMA_MODEL_PLANNER",
+    "lieutenant-planner": "OLLAMA_MODEL_LIEUTENANT_PLANNER",
+    "developer-writer": "OLLAMA_MODEL_DEVELOPER_WRITER",
+    executor: "OLLAMA_MODEL_EXECUTOR",
+    reviewer: "OLLAMA_MODEL_REVIEWER",
+    "reviewer-reviewer": "OLLAMA_MODEL_REVIEWER_REVIEWER",
+    "big-brother": "OLLAMA_MODEL_BIG_BROTHER",
+};
+/**
+ * Resolve which Ollama model to use for a given agent.
+ * Fallback chain: per-agent env var → OLLAMA_MODEL → hardcoded default.
+ */
+export function resolveOllamaModel(agentId) {
+    if (agentId) {
+        const envKey = AGENT_MODEL_ENV_KEYS[agentId];
+        if (envKey && process.env[envKey]) {
+            return process.env[envKey];
+        }
+    }
+    return process.env.OLLAMA_MODEL ?? DEFAULT_OLLAMA_MODEL;
+}
+export function createOllamaClient(baseUrl, model, agentId) {
     const url = baseUrl ?? process.env.OLLAMA_BASE_URL ?? "http://localhost:11434";
-    const mdl = model ?? process.env.OLLAMA_MODEL ?? "llama3.2";
+    const mdl = model ?? resolveOllamaModel(agentId);
     async function call(messages) {
         const endpoint = `${url}/api/chat`;
         const body = { model: mdl, messages, stream: false };

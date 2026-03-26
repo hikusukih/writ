@@ -53,13 +53,13 @@ async function main() {
     }
     await mkdir(PLANS_DIR, { recursive: true });
     await mkdir(JOBS_DIR, { recursive: true });
-    const client = createLLMClient();
+    const orchestratorClient = createLLMClient("orchestrator");
     const model = getActiveModel();
     adapter.sendStatus(`Loaded ${identity.agents.length} agents from registry.`);
     adapter.sendStatus(`Provider: ${process.env.LLM_PROVIDER ?? "anthropic"} | Model: ${model}`);
     const jobStore = await createJobStore(JOBS_DIR);
     const jobExecutor = createDefaultJobExecutor({
-        client,
+        clientFactory: (agentId) => createLLMClient(agentId),
         identity,
         scriptsDir: SCRIPTS_DIR,
         plansDir: PLANS_DIR,
@@ -112,7 +112,7 @@ async function main() {
         const startTime = Date.now();
         verbose("User input", input);
         try {
-            const result = await handleRequest(client, input, identity, SCRIPTS_DIR, PLANS_DIR, conversationHistory, skipReview, adapter, scheduler);
+            const result = await handleRequest(orchestratorClient, input, identity, SCRIPTS_DIR, PLANS_DIR, conversationHistory, skipReview, adapter, scheduler);
             verbose("handleRequest result", {
                 response: result.response,
                 provenance: result.provenance,
@@ -144,7 +144,7 @@ async function main() {
             });
             // Fire-and-forget: sample a recent review decision for RR audit (don't block REPL)
             if (!skipReview) {
-                sampleAndAudit(client, identity, adapter, LOGS_DIR, 1.0, {
+                sampleAndAudit(orchestratorClient, identity, adapter, LOGS_DIR, 1.0, {
                     identityDir: IDENTITY_DIR,
                     runtimeDir: "runtime",
                 }).catch((err) => verbose("RR: audit error (non-blocking)", err instanceof Error ? err.message : String(err)));

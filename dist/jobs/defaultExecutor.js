@@ -4,7 +4,7 @@ import { createDetailedPlanWithDW } from "../agents/lieutenant-planner.js";
 import { createStrategicPlan } from "../agents/planner.js";
 import { listScripts } from "../scripts/index.js";
 export function createDefaultJobExecutor(deps) {
-    const { client, identity, scriptsDir, plansDir, skipReview, getStore } = deps;
+    const { clientFactory, identity, scriptsDir, plansDir, skipReview, getStore } = deps;
     return {
         async execute(job, adapter) {
             switch (job.type) {
@@ -27,14 +27,14 @@ export function createDefaultJobExecutor(deps) {
                 }
                 case "develop_script": {
                     const existingScripts = await listScripts(scriptsDir);
-                    return generateScript(client, { capability: job.goal, existingScripts }, identity);
+                    return generateScript(clientFactory("developer-writer"), { capability: job.goal, existingScripts }, identity);
                 }
                 case "plan": {
                     const assignment = {
                         id: job.id,
                         description: job.goal,
                     };
-                    return createDetailedPlanWithDW(client, assignment, identity, scriptsDir, plansDir, {
+                    return createDetailedPlanWithDW(clientFactory("lieutenant-planner"), assignment, identity, scriptsDir, plansDir, {
                         adapter,
                         skipReview,
                     });
@@ -44,7 +44,7 @@ export function createDefaultJobExecutor(deps) {
                     return { notified: true, message: job.goal };
                 }
                 case "replan": {
-                    return createStrategicPlan(client, job.goal, identity, plansDir);
+                    return createStrategicPlan(clientFactory("planner"), job.goal, identity, plansDir);
                 }
                 case "initiative_setup": {
                     throw new Error("initiative_setup: not implemented (InitiativeBuilder does not exist yet)");
