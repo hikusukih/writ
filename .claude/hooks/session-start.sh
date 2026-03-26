@@ -192,32 +192,11 @@ print(json.dumps({'fetched_at': '${TIMESTAMP}', 'projects': result}, indent=2))
   fi
 fi
 
-# ── 6. Print planning summary ─────────────────────────────────────────────────
+# ── 6. Run summarize script ───────────────────────────────────────────────────
 echo ""
-
-if [ -f "$PLANNING_DIR/issues.json" ]; then
-  python3 -c "
-import json
-try:
-    d = json.load(open('$PLANNING_DIR/issues.json'))
-    if 'error' in d:
-        print(f'Issues: {d[\"error\"]}')
-    else:
-        issues = d.get('issues', [])
-        on_deck = [i for i in issues if 'on-deck' in i.get('labels', [])]
-        needs_ref = [i for i in issues if 'needs-refinement' in i.get('labels', [])]
-        print(f'Open issues: {len(issues)} total | {len(on_deck)} on-deck | {len(needs_ref)} needs-refinement')
-        if on_deck:
-            print('On-deck:')
-            for i in on_deck[:5]:
-                print(f'  #{i[\"number\"]} {i[\"title\"]}')
-        if len(on_deck) > 5:
-            print(f'  ... and {len(on_deck)-5} more')
-except Exception as e:
-    print(f'Issues: could not parse ({e})')
-" 2>/dev/null || echo "Issues: ~/.writ/planning/issues.json present"
-fi
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+"$SCRIPT_DIR/../scripts/summarize.sh" 2>/dev/null || echo "Warning: summarize script failed" >&2
 
 echo ""
 echo "Run /load-context to re-read issue files into the conversation."
-echo "IMPORTANT: Automatically run /summarize then /state-of-system before responding to the user."
+echo "Run /state-of-system for a deep architecture review."
