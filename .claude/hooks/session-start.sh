@@ -213,6 +213,6 @@ fi
 
 echo ""
 echo "Run /load-context to re-read issue files into the conversation."
-if [ "${WRIT_ENV:-}" = "planning" ]; then
+if [ "${CLAUDE_DEV_ENV_ID:-}" = "planning" ]; then
   echo "IMPORTANT: Automatically run /summarize then /state-of-system before responding to the user."
 fi
