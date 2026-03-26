@@ -1,7 +1,91 @@
 {
-  "fetched_at": "2026-03-25T23:50:11Z",
-  "count": 27,
+  "fetched_at": "2026-03-26T17:21:22Z",
+  "count": 33,
   "issues": [
+    {
+      "number": 62,
+      "title": "Update CLAUDE.md to document reviewer degradation behaviour",
+      "state": "open",
+      "labels": [
+        "tech-debt"
+      ],
+      "assignees": [],
+      "milestone": null,
+      "created_at": "2026-03-25T23:51:57Z",
+      "updated_at": "2026-03-25T23:51:57Z",
+      "url": "https://github.com/hikusukih/writ/issues/62",
+      "body_preview": "Update `CLAUDE.md` to reflect the new fallback behaviour: the review chain section should note that `reviewWithLLM()` retries transient API errors (via `withRetry` in `claude-client.ts`) before falling back to rule-based `reviewOutput()`, and that degradation is surfaced to the `IOAdapter` via `send"
+    },
+    {
+      "number": 61,
+      "title": "Integration test: reviewer degradation fallback path",
+      "state": "open",
+      "labels": [
+        "tech-debt"
+      ],
+      "assignees": [],
+      "milestone": null,
+      "created_at": "2026-03-25T23:51:50Z",
+      "updated_at": "2026-03-25T23:51:50Z",
+      "url": "https://github.com/hikusukih/writ/issues/61",
+      "body_preview": "Add a test case to `src/integration/pipeline.integration.test.ts` (e.g. \"13. Reviewer Degradation\"). Configure `MockLLMClient` to throw a network-style error on reviewer calls for the orchestrator agent. Verify that: (a) the pipeline completes successfully using rule-based fallback, (b) the `TestAda"
+    },
+    {
+      "number": 60,
+      "title": "Surface reviewer degradation to IOAdapter in `reviewed.ts`",
+      "state": "open",
+      "labels": [
+        "tech-debt"
+      ],
+      "assignees": [],
+      "milestone": null,
+      "created_at": "2026-03-25T23:51:43Z",
+      "updated_at": "2026-03-25T23:51:43Z",
+      "url": "https://github.com/hikusukih/writ/issues/60",
+      "body_preview": "In `src/agents/reviewed.ts`, check the `degraded` flag on the `ReviewResult` returned by `reviewWithLLM()`. When `degraded` is true and an `adapter` is available in `ReviewOptions`, call `adapter.sendStatus(\"\u26a0 LLM reviewer unavailable \u2014 using rule-based fallback\")` so the user sees a degradation not"
+    },
+    {
+      "number": 59,
+      "title": "Add `degraded` flag to `ReviewResult` type and set it in `llm-reviewer.ts` fallback",
+      "state": "open",
+      "labels": [
+        "tech-debt"
+      ],
+      "assignees": [],
+      "milestone": null,
+      "created_at": "2026-03-25T23:51:36Z",
+      "updated_at": "2026-03-25T23:51:36Z",
+      "url": "https://github.com/hikusukih/writ/issues/59",
+      "body_preview": "Add an optional `degraded?: boolean` field to the `ReviewResult` type in `src/types.ts`. In `src/agents/llm-reviewer.ts`, set `degraded: true` on the `ReviewResult` returned from the catch block (the rule-based fallback path). Replace the bare `console.error` in the fallback with a `verbose()` struc"
+    },
+    {
+      "number": 58,
+      "title": "Unit tests for `withRetry` in `claude-client.test.ts`",
+      "state": "open",
+      "labels": [
+        "tech-debt"
+      ],
+      "assignees": [],
+      "milestone": null,
+      "created_at": "2026-03-25T23:51:30Z",
+      "updated_at": "2026-03-25T23:51:30Z",
+      "url": "https://github.com/hikusukih/writ/issues/58",
+      "body_preview": "Create `src/agents/claude-client.test.ts`. Mock the Anthropic SDK to throw `APIStatusError(429)` twice then succeed, and verify that `sendMessage` retries the expected number of times and ultimately returns the successful response. Add a test that non-retryable errors (e.g. status 400) are thrown im"
+    },
+    {
+      "number": 57,
+      "title": "Add `withRetry` helper to `claude-client.ts` for 429/503/network errors",
+      "state": "open",
+      "labels": [
+        "tech-debt"
+      ],
+      "assignees": [],
+      "milestone": null,
+      "created_at": "2026-03-25T23:51:24Z",
+      "updated_at": "2026-03-25T23:51:24Z",
+      "url": "https://github.com/hikusukih/writ/issues/57",
+      "body_preview": "Implement a `withRetry<T>(fn: () => Promise<T>, maxAttempts?: number): Promise<T>` helper inside `src/agents/claude-client.ts` that catches `Anthropic.APIStatusError` with status 429 or 503, and network-level fetch failures, then retries with exponential backoff (2 s, 4 s, 8 s) before rethrowing. No"
+    },
     {
       "number": 46,
       "title": "Initiative system: InitiativeBuilder agent",
