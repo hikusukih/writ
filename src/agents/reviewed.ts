@@ -57,7 +57,7 @@ export async function applyReview(
 
   // Notify user when LLM reviewer was unavailable and rule-based fallback was used
   if (review.degraded && adapter) {
-    adapter.sendStatus("⚠ LLM reviewer unavailable — using rule-based fallback").catch?.(() => {});
+    Promise.resolve(adapter.sendStatus("⚠ LLM reviewer unavailable — using rule-based fallback")).catch(() => {});
   }
 
   // Log rule-based decisions when no LLM was used (LLM path logs internally)

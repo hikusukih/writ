@@ -951,3 +951,48 @@ describe("11. Provenance Chain with Job IDs", () => {
     30_000
   );
 });
+
+// ---------------------------------------------------------------------------
+// Test 13 — Reviewer Degradation  (mock-only)
+//
+// Validates: when the LLM reviewer throws, applyReview() falls back to
+// rule-based review, the pipeline completes, and a degradation status
+// message is surfaced to the adapter.
+// ---------------------------------------------------------------------------
+
+describe("13. Reviewer Degradation", () => {
+  it.skipIf(USE_REAL_LLM)(
+    "completes pipeline using rule-based fallback when LLM reviewer throws",
+    async () => {
+      const plansDir = await makeTmpPlansDir();
+
+      try {
+        const client = createMockLLMClient({ reviewerThrows: true });
+        const adapter = createTestAdapter();
+
+        const result = await handleRequest(
+          client,
+          "List the files in the project root",
+          identity,
+          INSTANCE_SCRIPTS_DIR,
+          plansDir,
+          undefined,
+          false,
+          adapter
+        );
+
+        // Pipeline completes despite reviewer failure
+        expect(result.response).toBeTruthy();
+        expect(adapter.collected.errors).toHaveLength(0);
+
+        // Degradation warning was surfaced to the adapter
+        expect(
+          adapter.collected.statusMessages.some((m) => m.includes("rule-based fallback"))
+        ).toBe(true);
+      } finally {
+        await rm(plansDir, { recursive: true, force: true });
+      }
+    },
+    30_000
+  );
+});

@@ -26,6 +26,12 @@ export interface MockLLMOptions {
   reviewerDecision?: string;
 
   /**
+   * When true, reviewer calls throw an error instead of returning a response.
+   * Used to test the LLM-reviewer-unavailable degradation path.
+   */
+  reviewerThrows?: boolean;
+
+  /**
    * When true, the first LP call returns a plan with a __missing__ scriptId,
    * triggering the DW path. Subsequent LP calls return a normal plan.
    */
@@ -113,6 +119,7 @@ export function createMockLLMClient(options: MockLLMOptions = {}): MockLLMClient
     // LLM reviewer: system prompt begins with the reviewer preamble
     if (systemPrompt.includes("You are the security and ethics reviewer")) {
       callLog.push("reviewer");
+      if (options.reviewerThrows) throw new Error("Mock LLM reviewer unavailable");
       return ok(reviewerResponse);
     }
 
