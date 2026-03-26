@@ -11,7 +11,7 @@ Custom slash commands in `.claude/commands/`:
 - `/load-context` — Re-read `~/.writ/planning/issues.json` and `board.json` (fetched at session start) and summarize open issues and board state
 - `/generate-tasks #N` — Break issue #N into concrete GitHub sub-issues in dependency order (Research → Types → Core → Unit tests → Integration test → Docs); creates sub-issues via the GitHub MCP
 
-**Session start**: At the start of each planning session, automatically run `/summarize` then `/state-of-system` before responding to the user, to initialize full planning context.
+**Session start**: When `WRIT_ENV=planning` is set (the planning cloud environment only), automatically run `/summarize` then `/state-of-system` before responding to the user. Do **not** run these automatically in other environments (laptop, toolbox, etc.).
 
 ## Issue Body Convention
 
