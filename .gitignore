@@ -24,6 +24,9 @@ yarn-lock.json
 .env.local
 .env.*.local
 
+# Local Claude Code settings (machine-specific, not for version control)
+.claude/settings.local.json
+
 # IDE & OS
 .vscode/
 .idea/
