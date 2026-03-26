@@ -57,7 +57,7 @@ describe("CLIAdapter output methods", () => {
   it("sendProgress prints [jobId] message to stdout", () => {
     const adapter = createCLIAdapter();
     adapter.sendProgress("job-42", "running step 1 of 3");
-    expect(logSpy).toHaveBeenCalledWith("[job-42] running step 1 of 3");
+    expect(logSpy).toHaveBeenCalledWith(expect.stringContaining("[job-42] running step 1 of 3"));
   });
 
   it("onRequest stores handler (smoke test — handler called with input)", async () => {

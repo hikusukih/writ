@@ -831,6 +831,70 @@ describe("12. Per-agent clientFactory wiring", () => {
 });
 
 // ---------------------------------------------------------------------------
+// Test 13 — Pipeline Breadcrumb Progress Messages  (mock-only)
+//
+// Validates: sendProgress() is called at key pipeline stages, and the
+// TestAdapter collects breadcrumb messages for inspection.
+// ---------------------------------------------------------------------------
+
+describe("13. Pipeline Breadcrumb Progress Messages", () => {
+  it.skipIf(USE_REAL_LLM)(
+    "emits progress breadcrumbs through the pipeline",
+    async () => {
+      const plansDir = await makeTmpPlansDir();
+      const jobsDir = await mkdtemp(join(tmpdir(), "writ-integ-breadcrumb-"));
+
+      try {
+        const client = createMockLLMClient();
+        const adapter = createTestAdapter();
+
+        const store = await createJobStore(jobsDir);
+        const executor = createDefaultJobExecutor({
+          clientFactory: (_agentId) => client,
+          identity,
+          scriptsDir: INSTANCE_SCRIPTS_DIR,
+          plansDir,
+          skipReview: true,
+          getStore: () => store,
+        });
+        const scheduler = createScheduler(store, executor, adapter);
+
+        await handleRequest(
+          client,
+          "List the files in the project root",
+          identity,
+          INSTANCE_SCRIPTS_DIR,
+          plansDir,
+          undefined,
+          true,
+          adapter,
+          scheduler
+        );
+
+        const messages = adapter.collected.progressMessages.map((p) => p.message);
+
+        // Orchestrator breadcrumbs
+        expect(messages.some((m) => m.includes("General Planner"))).toBe(true);
+        expect(messages.some((m) => m.includes("Strategic plan ready"))).toBe(true);
+        expect(messages.some((m) => m.includes("synthesizing response"))).toBe(true);
+
+        // Scheduler breadcrumbs
+        expect(messages.some((m) => m.includes("Starting:"))).toBe(true);
+        expect(messages.some((m) => m.includes("Complete:"))).toBe(true);
+
+        // DefaultJobExecutor breadcrumbs
+        expect(messages.some((m) => m.includes("Lieutenant Planner: generating detailed plan"))).toBe(true);
+        expect(messages.some((m) => m.includes("Executor: mapping plan to instructions"))).toBe(true);
+      } finally {
+        await rm(plansDir, { recursive: true, force: true });
+        await rm(jobsDir, { recursive: true, force: true });
+      }
+    },
+    30_000
+  );
+});
+
+// ---------------------------------------------------------------------------
 // Test 10 — Channel Routing  (mock-only, Task 5.5)
 //
 // Validates: jobs created by the orchestrator carry a non-empty channel array
