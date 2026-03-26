@@ -1,23 +1,20 @@
 #!/bin/bash
 # Session startup hook for Writ.
-# Runs on session start/resume in Claude Code on the web.
+# Runs on session start/resume in every Claude Code environment.
 #
-# Planning data strategy:
-#   - If GH_TOKEN is set: fetch live from GitHub API, then push a snapshot to the
-#     `planning` branch (git plumbing, no checkout) as a cache for future sessions.
-#   - If GH_TOKEN is unset: read the last snapshot from origin/planning as a fallback.
+# Always:
+#   1. Fetch origin/main (rebase reference)
+#   2. Print branch + latest main
 #
-# Order of operations:
-#   1. Fetch origin/main (for rebase reference)
-#   2. Fetch origin/planning (cache branch)
-#   3. Load planning data (API or cache)
-#   4. Print context summary
+# Planning env only (CLAUDE_DEV_ENV_ID=planning):
+#   3. Fetch origin/planning (cache branch)
+#   4. Load planning data (GitHub API or cache fallback)
+#   5. Push snapshot to planning branch
+#   6. Print issue summary + auto-run directive
 
 set -euo pipefail
 
 REPO="hikusukih/writ"
-PLANNING_DIR="$HOME/.writ/planning"
-mkdir -p "$PLANNING_DIR"
 
 echo "=== Session Start ===" >&2
 echo "Branch: $(git branch --show-current 2>/dev/null || echo unknown)" >&2
@@ -27,13 +24,27 @@ if git remote get-url origin &>/dev/null; then
   git fetch origin main --quiet 2>/dev/null || echo "Warning: could not fetch origin/main" >&2
 fi
 
-# ── 2. Fetch planning branch (cache) ─────────────────────────────────────────
+# ── 2. Print base context (all environments) ──────────────────────────────────
+echo ""
+echo "=== Session Context ==="
+echo "Branch: $(git branch --show-current 2>/dev/null || echo unknown)"
+echo "Latest main: $(git log origin/main --oneline -1 2>/dev/null || echo 'not fetched')"
+
+# ── Planning env only ─────────────────────────────────────────────────────────
+if [ "${CLAUDE_DEV_ENV_ID:-}" != "planning" ]; then
+  exit 0
+fi
+
+PLANNING_DIR="$HOME/.writ/planning"
+mkdir -p "$PLANNING_DIR"
+
+# ── 3. Fetch planning branch (cache) ─────────────────────────────────────────
 PLANNING_BRANCH_EXISTS=false
 if git fetch origin planning --quiet 2>/dev/null; then
   PLANNING_BRANCH_EXISTS=true
 fi
 
-# ── 3. Load planning data ─────────────────────────────────────────────────────
+# ── 4. Load planning data ─────────────────────────────────────────────────────
 if [ -z "${GH_TOKEN:-}" ]; then
   # No token — try reading from planning branch cache
   echo "GH_TOKEN not set — trying planning branch cache..." >&2
@@ -153,7 +164,7 @@ print(json.dumps({'fetched_at': '${TIMESTAMP}', 'projects': result}, indent=2))
     echo "No classic project boards found (GitHub Projects v2 requires GraphQL)" >&2
   fi
 
-  # ── Push snapshot to planning branch (git plumbing, no checkout) ─────────────
+  # ── 5. Push snapshot to planning branch (git plumbing, no checkout) ───────────
   echo "Updating planning branch cache..." >&2
   BLOB_ISSUES=$(git hash-object -w "$PLANNING_DIR/issues.json" 2>/dev/null) || BLOB_ISSUES=""
   BLOB_BOARD=$(git hash-object -w "$PLANNING_DIR/board.json" 2>/dev/null)  || BLOB_BOARD=""
@@ -181,11 +192,7 @@ print(json.dumps({'fetched_at': '${TIMESTAMP}', 'projects': result}, indent=2))
   fi
 fi
 
-# ── 4. Print context summary ──────────────────────────────────────────────────
-echo ""
-echo "=== Planning Context Loaded ==="
-echo "Branch: $(git branch --show-current 2>/dev/null || echo unknown)"
-echo "Latest main: $(git log origin/main --oneline -1 2>/dev/null || echo 'not fetched')"
+# ── 6. Print planning summary ─────────────────────────────────────────────────
 echo ""
 
 if [ -f "$PLANNING_DIR/issues.json" ]; then
@@ -208,11 +215,9 @@ try:
             print(f'  ... and {len(on_deck)-5} more')
 except Exception as e:
     print(f'Issues: could not parse ({e})')
-" 2>/dev/null || echo "Issues: runtime/planning/issues.json present"
+" 2>/dev/null || echo "Issues: ~/.writ/planning/issues.json present"
 fi
 
 echo ""
 echo "Run /load-context to re-read issue files into the conversation."
-if [ "${CLAUDE_DEV_ENV_ID:-}" = "planning" ]; then
-  echo "IMPORTANT: Automatically run /summarize then /state-of-system before responding to the user."
-fi
+echo "IMPORTANT: Automatically run /summarize then /state-of-system before responding to the user."
