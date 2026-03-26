@@ -55,6 +55,11 @@ export async function applyReview(
     ? await reviewWithLLM(content, subjectAgentId ?? "agent", identity, client, reviewerConfig, antiPatterns, logsDir)
     : reviewOutput(content, identity);
 
+  // Notify user when LLM reviewer was unavailable and rule-based fallback was used
+  if (review.degraded && adapter) {
+    adapter.sendStatus("⚠ LLM reviewer unavailable — using rule-based fallback").catch?.(() => {});
+  }
+
   // Log rule-based decisions when no LLM was used (LLM path logs internally)
   if (!useLLM && logsDir) {
     const entry = buildLogEntry(subjectAgentId ?? "agent", review.decision, review.reasoning, "rule", content);
