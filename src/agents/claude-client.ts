@@ -23,6 +23,41 @@ export interface LLMClient {
   ): Promise<ClaudeResponse>;
 }
 
+const RETRY_DELAYS_MS = [2000, 4000, 8000];
+
+function isRetryable(err: unknown): boolean {
+  // 429 rate limit or 503 service unavailable
+  if (err instanceof Anthropic.RateLimitError) return true;
+  if (err instanceof Anthropic.InternalServerError) return true;
+  // Network-level failures (fetch errors, connection resets, etc.)
+  if (err instanceof Anthropic.APIConnectionError) return true;
+  return false;
+}
+
+export async function withRetry<T>(
+  fn: () => Promise<T>,
+  maxAttempts = 3
+): Promise<T> {
+  let lastErr: unknown;
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    try {
+      return await fn();
+    } catch (err) {
+      if (!isRetryable(err) || attempt === maxAttempts - 1) throw err;
+      lastErr = err;
+      const delayMs = RETRY_DELAYS_MS[attempt] ?? RETRY_DELAYS_MS[RETRY_DELAYS_MS.length - 1];
+      verbose("Claude API: retryable error, backing off", {
+        attempt: attempt + 1,
+        maxAttempts,
+        delayMs,
+        error: err instanceof Error ? err.message : String(err),
+      });
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+    }
+  }
+  throw lastErr;
+}
+
 function extractResponse(response: Anthropic.Message): ClaudeResponse {
   const textBlock = response.content.find((b) => b.type === "text");
   const content = textBlock ? textBlock.text : "";
@@ -51,12 +86,12 @@ export function createClaudeClient(apiKey?: string): LLMClient {
     ): Promise<ClaudeResponse> {
       const model = getClaudeModel();
       verbose("Claude API: sendMessage", { model, systemPromptLength: systemPrompt.length, userMessage });
-      const response = await client.messages.create({
+      const response = await withRetry(() => client.messages.create({
         model,
         max_tokens: 4096,
         system: systemPrompt,
         messages: [{ role: "user", content: userMessage }],
-      });
+      }));
       const result = extractResponse(response);
       verbose("Claude API: response", { contentLength: result.content.length, inputTokens: result.inputTokens, outputTokens: result.outputTokens, content: result.content });
       return result;
@@ -68,12 +103,12 @@ export function createClaudeClient(apiKey?: string): LLMClient {
     ): Promise<ClaudeResponse> {
       const model = getClaudeModel();
       verbose("Claude API: sendMessages", { model, systemPromptLength: systemPrompt.length, messageCount: messages.length });
-      const response = await client.messages.create({
+      const response = await withRetry(() => client.messages.create({
         model,
         max_tokens: 4096,
         system: systemPrompt,
         messages,
-      });
+      }));
       const result = extractResponse(response);
       verbose("Claude API: response", { contentLength: result.content.length, inputTokens: result.inputTokens, outputTokens: result.outputTokens, content: result.content });
       return result;
