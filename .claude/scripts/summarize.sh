@@ -19,7 +19,7 @@ echo ""
 
 # ── 1. Merged PRs (last 30 days) ──────────────────────────────────────────────
 echo "## Merged PRs (last 30 days)"
-MERGES=$(git log --oneline --merges origin/main --since="30 days ago" 2>/dev/null) || MERGES=""
+MERGES=$(git log --oneline --first-parent origin/main --since="30 days ago" 2>/dev/null) || MERGES=""
 if [ -n "$MERGES" ]; then
   echo "$MERGES" | sed 's/^/- /'
 else
@@ -50,7 +50,7 @@ try:
         print('_' + d['error'] + '_')
         sys.exit(0)
     issues = d.get('issues', [])
-    for label in ['on-deck', 'needs-refinement', 'blocked']:
+    for label in ['on-deck', 'needs-refinement']:
         filtered = [i for i in issues if label in i.get('labels', [])]
         print(f'### {label} ({len(filtered)})')
         for i in filtered:
@@ -64,7 +64,7 @@ except Exception as e:
 }
 
 print_issues_from_api() {
-  for label in on-deck needs-refinement blocked; do
+  for label in on-deck needs-refinement; do
     echo "### $label"
     curl -sf \
       -H "Authorization: token $GH_TOKEN" \
