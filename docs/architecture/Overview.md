@@ -282,6 +282,7 @@ Each class of agent may get a class-specific reviewer to enforce boundaries appr
 
 - [Model Management](ModelManagement.md) - Model router, A/B testing across models, performance tracking per task category. Critical for non-deterministic tasks (content generation, creative work) where model capability *is* the capability. Tracks model drift over time, selects for cheapest competent model per task type.
 - [Prompt Evolution](PromptEvolution.md) - Version history of prompt changes with performance deltas, prompt A/B testing, improvement queue. Wraps *BIG_BROTHER*'s existing mechanism with tracking and rollback. Being a capable OS user in a prompt-driven world includes prompt engineering.
+- [Script Intake Pipeline](script-intake-pipeline.md) - Review pipeline for ingesting externally-authored scripts before promotion to the approved library. Enforces an information barrier between behavioral analysis and declared metadata, with a mandatory human approval gate.
 
 ## Foundational Principles
 
